@@ -10,7 +10,8 @@ function test_cacert {
   rm -rf $VAULT_DIR
   # Generate a certificate authority
   cacert domain.com
-  [ -f "$VAULT_DIR/domain.com/ca.cert.pem" ] || false
+  [ -f "$VAULT_DIR/com.domain/ca.cert.pem" ] || false
+  [ -f "$VAULT_DIR/com.domain/ca.key.pem" ] || false
 }
 
 function test_cacert_view {
@@ -30,7 +31,8 @@ function test_cert {
   cacert domain.com
   # Create a certificate
   cert test.domain.com
-  [ -f "$VAULT_DIR/domain.com/test.cert.pem" ] || false
+  [ -f "$VAULT_DIR/com.domain/test.cert.pem" ] || false
+  [ -f "$VAULT_DIR/com.domain/test.key.pem" ] || false
 }
 
 function test_cert_check {
@@ -53,7 +55,7 @@ function test_cert_check_from_file {
   # Create a certificate
   cert test.domain.com
   # Validate certificate
-  res=`cert_check_from_file "$VAULT_DIR/domain.com/test.cert.pem"`
+  res=`cert_check_from_file "$VAULT_DIR/com.domain/test.cert.pem"`
   echo $res | grep 'Certificate is valid.' > /dev/null 
 }
 
@@ -66,9 +68,9 @@ function test_cert_check_from_file_invalid {
   cert test.domain.com
   # create an invalid certificate
   cacert invalid.com
-  cp -rp "$VAULT_DIR/invalid.com/ca.cert.pem" "$VAULT_DIR/domain.com/ca.cert.pem"
+  cp -rp "$VAULT_DIR/invalid.com/ca.cert.pem" "$VAULT_DIR/com.domain/ca.cert.pem"
   # Validate certificate
-  res=`cert_check_from_file "$VAULT_DIR/domain.com/test.cert.pem"`
+  res=`cert_check_from_file "$VAULT_DIR/com.domain/test.cert.pem"`
   echo $res | grep 'Certificate is not valid.' > /dev/null 
 }
 
@@ -90,7 +92,7 @@ function test_csr_create {
   cacert domain.com
   # Create a certificate
   csr_create test.domain.com
-  [ -f "$VAULT_DIR/domain.com/test.cert.csr" ] || false
+  [ -f "$VAULT_DIR/com.domain/test.cert.csr" ] || false
 }
 
 function test_csr_sign {
@@ -101,7 +103,7 @@ function test_csr_sign {
   # Create a certificate
   csr_create test.domain.com
   csr_sign test.domain.com
-  [ -f "$VAULT_DIR/domain.com/test.cert.pem" ] || false
+  [ -f "$VAULT_DIR/com.domain/test.cert.pem" ] || false
 }
 
 function test_csr_sign_from_file {
@@ -111,8 +113,8 @@ function test_csr_sign_from_file {
   cacert domain.com
   # Create a certificate
   csr_create test.domain.com
-  csr_sign_from_file "$VAULT_DIR/domain.com/test.cert.csr"
-  [ -f "$VAULT_DIR/domain.com/test.cert.pem" ] || false
+  csr_sign_from_file "$VAULT_DIR/com.domain/test.cert.csr"
+  [ -f "$VAULT_DIR/com.domain/test.cert.pem" ] || false
 }
 
 function test_csr_view {
@@ -124,6 +126,11 @@ function test_csr_view {
   csr_create test.domain.com
   res=`csr_view test.domain.com`
   echo $res | grep 'Certificate Request:' > /dev/null 
+}
+
+function test_utils_reverse {
+  res=`utils_reverse test.domain.com`
+  [ $res == 'com.domain.test' ] || false
 }
 
 tests="""
@@ -138,6 +145,7 @@ test_csr_create
 test_csr_sign
 test_csr_sign_from_file
 test_csr_view
+test_utils_reverse
 """
 
 for test in $tests; do

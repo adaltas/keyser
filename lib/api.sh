@@ -45,7 +45,7 @@ Usage
 cacert(){
   tld=$1
   if [ -e $1 ]; then help_cacert; exit; fi
-  tld_dir=$VAULT_DIR/$tld
+  tld_dir=$VAULT_DIR/$(utils_reverse $tld)
   # Validation
   if [ -f "$tld_dir/ca.key.pem" ]; then  echo ''; echo '!!! cacert files already exists !!!'; echo ''; help; exit 1; fi
   # Prepare configuration template
@@ -77,7 +77,7 @@ Usage
 cacert_view(){
   fqdn=$1
   if [ -e $fqdn ]; then help_cacert_view; exit 1; fi
-  tld_dir=$VAULT_DIR/$fqdn
+  tld_dir=$VAULT_DIR/$(utils_reverse $fqdn)
   openssl x509 -noout -text -fingerprint \
     -in $tld_dir/ca.cert.pem
 }
@@ -118,7 +118,7 @@ cert_check(){
   fqdn=$1
   tld=${fqdn#*.}
   hostname=${fqdn%%.*}
-  tld_dir=$VAULT_DIR/$tld
+  tld_dir=$VAULT_DIR/$(utils_reverse $tld)
   cert_file=$tld_dir/$hostname.cert.pem
   cert_check_from_file $cert_file
 }
@@ -141,7 +141,7 @@ cert_check_from_file(){
   fqdn=`openssl x509 -noout -subject -in $cert_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`
   tld=${fqdn#*.}
   hostname=${fqdn%%.*}
-  tld_dir=$VAULT_DIR/$tld
+  tld_dir=$VAULT_DIR/$(utils_reverse $tld)
   ca_file=${2:-"$tld_dir/ca.cert.pem"}
   echo $ca_file
   echo $cert_file
@@ -174,7 +174,7 @@ cert_view(){
   fqdn=$1
   tld=${fqdn#*.}
   hostname=${fqdn%%.*}
-  tld_dir=$VAULT_DIR/$tld
+  tld_dir=$VAULT_DIR/$(utils_reverse $tld)
   #domain=`openssl x509 -noout -subject -in ca.cert.pem | sed -n '/^subject/s/^.*CN=//p'`
   #shortname=${fqdn%".$domain"}
   # shortname=`echo $1 | sed 's/\([[:alnum:]]\)\..*/\1/'`
@@ -200,7 +200,7 @@ csr_create(){
   # hostname=${fqdn%".$domain"}
   tld=${fqdn#*.}
   hostname=${fqdn%%.*}
-  tld_dir=$VAULT_DIR/$tld
+  tld_dir=$VAULT_DIR/$(utils_reverse $tld)
   if [ ! -f $tld_dir/ca.key.pem ]; then echo 'Run `./keyser cacert` first.'; exit 1; fi
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
@@ -228,12 +228,12 @@ csr_sign_from_file(){
   fqdn=`openssl req -noout -subject -in  $csr_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`
   tld=${fqdn#*.}
   hostname=${fqdn%%.*}
-  tld_dir=$VAULT_DIR/$tld
+  tld_dir=$VAULT_DIR/$(utils_reverse $tld)
   # Copy the csr file into the vault directory unless already there
   if [ $csr_file != $tld_dir/${csr_file##*/} ]; then
     cp -rp $csr_file $tld_dir/${csr_file##*/}
   fi
-  # Sign the CSR (create "${shortname}.cert.pem")
+  # Sign the CSR
   openssl x509 -req -sha256 -days 7300 \
     -CA $tld_dir/ca.cert.pem -CAkey $tld_dir/ca.key.pem \
     -CAcreateserial -CAserial $tld_dir/ca.seq \
@@ -249,9 +249,19 @@ csr_view(){
   if [ -z "$1" ]; then help; exit 1; fi
   tld=${fqdn#*.}
   hostname=${fqdn%%.*}
-  tld_dir=$VAULT_DIR/$tld
+  tld_dir=$VAULT_DIR/$(utils_reverse $tld)
   # domain=`openssl x509 -noout -subject -in $VAULT_DIR/ca.cert.pem | sed -n '/^subject/s/^.*CN=//p'`
   # shortname=${fqdn%".$domain"}
   openssl req -noout -text \
     -in $tld_dir/${hostname}.cert.csr
+}
+
+utils_reverse(){
+  IFS=. read -ra line <<< "$1"
+  let x=${#line[@]}-1; 
+  while [ "$x" -ge 0 ]; do 
+        echo -n "${line[$x]}"; 
+        [ $x != 0 ] && echo -n '.';
+        let x--; 
+  done
 }
