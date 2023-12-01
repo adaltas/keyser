@@ -37,8 +37,33 @@ function test_cert {
   # Create a certificate
   res=`cert test.domain.com`
   [ $? != 0 ] && exit 1
+  [ -f "$VAULT_DIR/com.domain.test/ca.crt" ] || exit 1
   [ -f "$VAULT_DIR/com.domain.test/cert.pem" ] || exit 1
   [ -f "$VAULT_DIR/com.domain.test/key.pem" ] || exit 1
+  echo "$res" | grep 'Key created in:' > /dev/null
+  echo "$res" | grep 'CSR created in:' > /dev/null
+  echo "$res" | grep 'Certificate created in:' > /dev/null
+}
+
+function test_cert_with_ca_fqdn {
+  VAULT_DIR='../tmp/test_cert'
+  rm -rf $VAULT_DIR
+  # Generate a certificate authority
+  cacert domain-1.com > /dev/null
+  # Create a certificate
+  res=`cert test.domain-2.com domain-1.com`
+  # Validate execution
+  [ $? != 0 ] && exit 1
+  [ -f "$VAULT_DIR/com.domain-2.test/ca.crt" ] || exit 1
+  [ -f "$VAULT_DIR/com.domain-2.test/cert.pem" ] || exit 1
+  [ -f "$VAULT_DIR/com.domain-2.test/key.pem" ] || exit 1
+  # Make sure the ca.crt is correctly generated
+  cacertin=`openssl x509 -noout -fingerprint -in $VAULT_DIR/com.domain-1/cert.pem`
+  cacertout=`openssl x509 -noout -fingerprint -in $VAULT_DIR/com.domain-2.test/ca.crt`
+  [[ $cacertin == $cacertout ]] || exit 1
+  cert_check_from_file $VAULT_DIR/com.domain-2.test/cert.pem $VAULT_DIR/com.domain-2.test/ca.crt > /dev/null
+  [ $? != 0 ] && exit 1
+  # Validate output
   echo "$res" | grep 'Key created in:' > /dev/null
   echo "$res" | grep 'CSR created in:' > /dev/null
   echo "$res" | grep 'Certificate created in:' > /dev/null
@@ -187,10 +212,27 @@ function test_utils_domain {
   [ $res == 'test' ] || exit 1
 }
 
+test_intermediate() {
+  VAULT_DIR='../tmp/test_intermediate'
+  rm -rf $VAULT_DIR
+  # Generate a certificate authority
+  cacert domain-1.com >/dev/null
+  # Create an intermediate certificates
+  cert domain-2.com domain-1.com >/dev/null
+  cert domain-3.com domain-2.com >/dev/null
+  # # Create a leaf certificate
+  cert domain-4.com domain-3.com >/dev/null
+  # Certificate validation
+  res=`cert_check domain-4.com`
+  [ $? != 0 ] && exit 1
+  echo "$res" | grep 'Certificate is valid.' > /dev/null
+}
+
 tests="""
 test_cacert
 test_cacert_view
 test_cert
+test_cert_with_ca_fqdn
 test_cert_check
 test_cert_check_from_file_no_ca_file
 test_cert_check_from_file_with_ca_file
@@ -203,6 +245,7 @@ test_csr_view
 test_utils_reverse
 test_utils_tld
 test_utils_domain
+test_intermediate
 """
 
 for test in $tests; do

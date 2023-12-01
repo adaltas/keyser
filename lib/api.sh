@@ -5,8 +5,7 @@ set -e
 # http://users.skynet.be/pascalbotte/art/server-cert.htm: ca serial and pks store
 
 pwd=`dirname "${BASH_SOURCE}"`
-# VAULT_DIR="${VAULT_DIR:-'../vault'}"
-VAULT_DIR="${VAULT_DIR:-../out}"
+VAULT_DIR="${VAULT_DIR:-'../vault'}"
 
 help(){
   echo """
@@ -16,9 +15,9 @@ Usage:
 Available Commands:
   keyser cacert <fqdn>
   keyser cacert_view <fqdn>
-  keyser cert <fqdn>
-  keyser cert_check <fqdn> [<ca_file>]
-  keyser cert_check_from_file <cert_file> [<ca_file>]
+  keyser cert <fqdn> [<ca_fqdn>]
+  keyser cert_check <fqdn> [<cacert_file>]
+  keyser cert_check_from_file <cert_file> [<cacert_file>]
   keyser cert_view <fqdn>
   keyser csr_create <fqdn>
   keyser csr_sign <fqdn> [<ca_fqdn>]
@@ -29,6 +28,12 @@ Example
   keyser cacert domain.com
   keyser cert test.domain.com
   keyser cert_view test.domain.com
+
+Example with intermediate certifixate
+  keyser cacert domain-1.com
+  keyser cert domain-2.com domain-1.com
+  keyser cert domain-3.com domain-2.com
+  keyser cert_check_from_file test.domain.com ./vault/com/domain-3/cert.pem ./vault/com/domain-3/ca.crt
 
 """
 }
@@ -54,7 +59,7 @@ cacert(){
   sed -i "s|<commonName>|$fqdn|" $fqdn_dir/ca.cnf
   # RSA Private key (create "ca.key.pem")
   openssl genrsa -out $fqdn_dir/key.pem 2048
-  # Self-signed (with the key previously generated) root CA certificate (create "ca.cert.pem")
+  # Self-signed (with the key previously generated) root CA certificate (create "ca.crt.pem")
   # man: The req command primarily creates and processes certificate requests in PKCS#10 format.
   # "/C=FR/ST=IDF/L=Paris/O=Adaltas/CN=adaltas.com/emailAddress=david@adaltas.com"
   openssl req -x509 -new -sha256 \
@@ -89,7 +94,7 @@ Description
   Generate a certificate.
 
 Usage
-  keyser cert <fqdn>
+  keyser cert <fqdn> [<ca_fqdn>]
 
 Generate the certificate and private key for a give hostname. The command combine the csr_create and csr_sign commands for conveniency.
 """
@@ -98,7 +103,9 @@ cert(){
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert; exit 1; fi
   csr_create $fqdn
-  csr_sign $fqdn
+  echo csr_create $?
+  csr_sign $fqdn $2
+  echo csr_sign $?
 }
 
 help_cert_check(){
@@ -107,7 +114,7 @@ Description
   Check a hostname certificate against the certificate authority.
 
 Usage
-  keyser cert_check <fqdn> [<ca_file>]
+  keyser cert_check <fqdn> [<cacert_file>]
 
 Internally, the command localize the certificate inside its store. Then, it call the cert_check_from_file command.
 """
@@ -117,7 +124,8 @@ cert_check(){
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert_check; exit 1; fi
   fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
   cert_file=$fqdn_dir/cert.pem
-  cert_check_from_file $cert_file $2
+  cacert_file=$fqdn_dir/ca.crt
+  cert_check_from_file $cert_file $cacert_file
 }
 
 help_cert_check_from_file(){
@@ -126,7 +134,7 @@ Description
   Check a hostname certificate against the certificate authority.
 
 Usage
-  keyser cert_check_from_file <cert_file> [<ca_file>]
+  keyser cert_check_from_file <cert_file> [<cacert_file>]
 
 Internally, the command localize the certificate inside its store. Then, it call
 the cert_check_from_file command.
@@ -136,21 +144,18 @@ cert_check_from_file(){
   cert_file=$1
   if [ ! -n "$cert_file" ]; then echo 'Certificate file path is missing from arguments.'; help_cert_check_from_file; exit 1; fi
   if [ ! -f $cert_file ]; then echo "Certificate file does not exist: \"$cert_file\"."; exit 1; fi
-  ca_file=$2
-  echo ca_file_before: $ca_file
-  if [ ! -n "$ca_file" ]; then 
+  cacert_file=$2
+  if [ ! -n "$cacert_file" ]; then 
     fqdn=`openssl req -noout -subject -in  $csr_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
     ca_fqdn=${fqdn#*.}
     ca_fqdn_dir=$VAULT_DIR/$(utils_reverse $ca_fqdn)
-    ca_file=$ca_fqdn_dir/cert.pem
+    cacert_file=$ca_fqdn_dir/cert.pem
   fi
-  echo ca_file_after: $ca_file
-  echo cert_file: $cert_file
   openssl verify \
-    -CAfile $ca_file \
+    -CAfile $cacert_file \
     $cert_file \
     >/dev/null \
-    2>/dev/null
+    2>&1
   if [ $? == 0 ]; then
     echo 'Certificate is valid.'
   else
@@ -176,7 +181,7 @@ cert_view(){
   # tld=${fqdn#*.}
   # hostname=${fqdn%%.*}
   fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
-  #domain=`openssl x509 -noout -subject -in ca.cert.pem | sed -n '/^subject/s/^.*CN=//p'`
+  #domain=`openssl x509 -noout -subject -in ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
   #shortname=${fqdn%".$domain"}
   # shortname=`echo $1 | sed 's/\([[:alnum:]]\)\..*/\1/'`
   openssl x509 -text -fingerprint \
@@ -197,7 +202,7 @@ Generate a key and its certificate signing request.
 csr_create(){
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_create; exit 1; fi
-  # domain=`openssl x509 -noout -subject -in $VAULT_DIR/ca.cert.pem | sed -n '/^subject/s/^.*CN=//p'`
+  # domain=`openssl x509 -noout -subject -in $VAULT_DIR/ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
   fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
@@ -246,22 +251,36 @@ csr_sign_from_file(){
   if [ ! -f $csr_file ]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; exit 1; fi
   fqdn=`openssl req -noout -subject -in  $csr_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
   ca_fqdn=$2
-  if [ -e $ca_fqdn ]; then 
+  if [ ! -n "$ca_fqdn" ]; then 
     ca_fqdn=${fqdn#*.}
   fi
   fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
   ca_fqdn_dir=$VAULT_DIR/$(utils_reverse $ca_fqdn)
+  # Place a copy of the CSR file
   if [ $csr_file != "$fqdn_dir/${csr_file##*/}" ]; then
     cp -rp $csr_file $fqdn_dir/${csr_file##*/}
   fi
+  # Copy the certificate authority
+  # Note, naming is inspired by ipa
+  if [ -f $ca_fqdn_dir/cert.pem ]; then
+    echo '' > $fqdn_dir/ca.crt
+    if [ -f $ca_fqdn_dir/ca.crt ]; then
+      cat $ca_fqdn_dir/ca.crt >> $fqdn_dir/ca.crt
+    fi
+    cat $ca_fqdn_dir/cert.pem >> $fqdn_dir/ca.crt
+  fi
   # Sign the CSR
-  openssl x509 -req -sha256 -days 7300 \
-    -CA $ca_fqdn_dir/cert.pem -CAkey $ca_fqdn_dir/key.pem \
-    -CAcreateserial -CAserial $ca_fqdn_dir/ca.seq \
-    -extfile $pwd/sign.cnf \
-    -in $csr_file \
-    -out $fqdn_dir/cert.pem \
-    2>/dev/null
+  error=$(
+    openssl x509 -req -sha256 -days 7300 \
+      -CA $ca_fqdn_dir/cert.pem -CAkey $ca_fqdn_dir/key.pem \
+      -CAcreateserial -CAserial $ca_fqdn_dir/ca.seq \
+      -extfile $pwd/sign.cnf \
+      -in $csr_file \
+      -out $fqdn_dir/cert.pem \
+      2>&1 >/dev/null
+  )
+  if [ $? != 0 ]; then echo $error; exit 1; fi
+  echo 'Certificate authority in:' $fqdn_dir/ca.crt
   echo 'Certificate created in:' $fqdn_dir/cert.pem
 }
 
