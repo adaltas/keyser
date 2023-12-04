@@ -13,8 +13,50 @@ function test_cacert {
   [ -f "$VAULT_DIR/com.domain/cert.pem" ] || exit 1
   [ -f "$VAULT_DIR/com.domain/key.pem" ] || exit 1
   [ $? != 0 ] && exit 1
-  echo "$res" | grep 'Certificate key created:' > /dev/null 
-  echo "$res" | grep 'Certificate authority created:' > /dev/null 
+  echo "$res" | grep 'Certificate key created:' > /dev/null
+  echo "$res" | grep 'Certificate authority created:' > /dev/null
+}
+
+function test_cacert__subject_default {
+  VAULT_DIR='../tmp/test_cacert__subject'
+  rm -rf $VAULT_DIR
+  # Generate a certificate authority
+  cacert domain.com > /dev/null
+  res=`openssl x509 -noout -subject -in $VAULT_DIR/com.domain/cert.pem`
+  echo "$res" | grep 'subject=C = FR, O = Adaltas, L = Paris, CN = domain.com, emailAddress = no-reply@adaltas.com' > /dev/null
+}
+
+function test_cacert__subject_custom {
+  VAULT_DIR='../tmp/test_cacert__subject'
+  rm -rf $VAULT_DIR
+  # Generate a certificate authority
+  cacert -c PL -o "My Domain" -l Warsawa -e no-reply@domain.com domain.com > /dev/null
+  res=`openssl x509 -noout -subject -in $VAULT_DIR/com.domain/cert.pem`
+  echo "$res" | grep 'subject=C = PL, O = My Domain, L = Warsawa, CN = domain.com, emailAddress = no-reply@domain.com' > /dev/null
+}
+
+function test_cacert__force_false {
+  VAULT_DIR='../tmp/test_cacert__force_false'
+  rm -rf $VAULT_DIR
+  # Generate a certificate authority
+  cacert domain.com > /dev/null
+  # Attempt to overwrite the certificate
+  res=`cacert domain.com`
+  [ $? != 1 ] && exit 1
+  echo "$res" | grep 'CA certificate files already exists.' > /dev/null
+}
+
+function test_cacert__force_true {
+  VAULT_DIR='../tmp/test_cacert__force_false'
+  rm -rf $VAULT_DIR
+  # Generate a certificate authority
+  cacert domain.com > /dev/null
+  # Attempt to overwrite the certificate
+  # cacert -f domain.com
+  res=`cacert -f domain.com`
+  [ $? != 0 ] && exit 1
+  echo "$res" | grep 'Certificate key created:' > /dev/null
+  echo "$res" | grep 'Certificate authority created:' > /dev/null
 }
 
 function test_cacert_view {
@@ -26,7 +68,7 @@ function test_cacert_view {
   res=`cacert_view domain.com`
   [ $? != 0 ] && exit 1
   echo "$res" | grep 'Certificate:' > /dev/null
-  echo "$res" | grep 'Subject: C = FR, O = ADALTAS, L = Paris, CN = domain.com' > /dev/null
+  echo "$res" | grep 'Subject: C = FR, O = Adaltas, L = Paris, CN = domain.com, emailAddress = no-reply@adaltas.com' > /dev/null
 }
 
 function test_cert {
@@ -45,7 +87,7 @@ function test_cert {
   echo "$res" | grep 'Certificate created in:' > /dev/null
 }
 
-function test_cert_with_ca_fqdn {
+function test_cert__with_ca_fqdn {
   VAULT_DIR='../tmp/test_cert'
   rm -rf $VAULT_DIR
   # Generate a certificate authority
@@ -69,6 +111,22 @@ function test_cert_with_ca_fqdn {
   echo "$res" | grep 'Certificate created in:' > /dev/null
 }
 
+test_cert__intermediate() {
+  VAULT_DIR='../tmp/test_cert__intermediate'
+  rm -rf $VAULT_DIR
+  # Generate a certificate authority
+  cacert domain-1.com >/dev/null
+  # Create an intermediate certificates
+  cert domain-2.com domain-1.com >/dev/null
+  cert domain-3.com domain-2.com >/dev/null
+  # # Create a leaf certificate
+  cert domain-4.com domain-3.com >/dev/null
+  # Certificate validation
+  res=`cert_check domain-4.com`
+  [ $? != 0 ] && exit 1
+  echo "$res" | grep 'Certificate is valid.' > /dev/null
+}
+
 function test_cert_check {
   VAULT_DIR='../tmp/test_cert'
   rm -rf $VAULT_DIR
@@ -79,11 +137,11 @@ function test_cert_check {
   # Validate certificate
   res=`cert_check test.domain.com`
   [ $? != 0 ] && exit 1
-  echo "$res" | grep 'Certificate is valid.' > /dev/null 
+  echo "$res" | grep 'Certificate is valid.' > /dev/null
 }
 
-function test_cert_check_from_file_no_ca_file {
-  VAULT_DIR='../tmp/test_cert_check_from_file_no_ca_file'
+function test_cert_check_from_file__no_ca_file {
+  VAULT_DIR='../tmp/test_cert_check_from_file__no_ca_file'
   rm -rf $VAULT_DIR
   # Generate a certificate authority
   cacert domain.com > /dev/null
@@ -92,11 +150,11 @@ function test_cert_check_from_file_no_ca_file {
   # Validate certificate
   res=`cert_check_from_file $VAULT_DIR/com.domain.test/cert.pem`
   [ $? != 0 ] && exit 1
-  echo "$res" | grep 'Certificate is valid.' > /dev/null 
+  echo "$res" | grep 'Certificate is valid.' > /dev/null
 }
 
-function test_cert_check_from_file_with_ca_file {
-  VAULT_DIR='../tmp/test_cert_check_from_file_with_ca_file'
+function test_cert_check_from_file__with_ca_file {
+  VAULT_DIR='../tmp/test_cert_check_from_file__with_ca_file'
   rm -rf $VAULT_DIR
   # Generate a certificate authority
   cacert domain.com > /dev/null
@@ -107,11 +165,11 @@ function test_cert_check_from_file_with_ca_file {
   # Validate certificate
   res=`cert_check_from_file $VAULT_DIR/com.domain.test/cert.pem $VAULT_DIR/parent.cert.pem`
   [ $? != 0 ] && exit 1
-  echo "$res" | grep 'Certificate is valid.' > /dev/null 
+  echo "$res" | grep 'Certificate is valid.' > /dev/null
 }
 
-function test_cert_check_from_file_invalid {
-  VAULT_DIR='../tmp/test_cert_check_from_file_invalid'
+function test_cert_check_from_file__invalid {
+  VAULT_DIR='../tmp/test_cert_check_from_file__invalid'
   rm -rf $VAULT_DIR
   # Generate a certificate authority
   cacert domain.com > /dev/null
@@ -123,7 +181,7 @@ function test_cert_check_from_file_invalid {
   # Validate certificate
   res=`cert_check_from_file "$VAULT_DIR/com.domain.test/cert.pem"`
   [ $? != 1 ] && exit 1
-  echo "$res" | grep 'Certificate is not valid.' > /dev/null 
+  echo "$res" | grep 'Certificate is not valid.' > /dev/null
 }
 
 function test_cert_view {
@@ -136,7 +194,7 @@ function test_cert_view {
   # View a certificate
   res=`cert_view test.domain.com`
   [ $? != 0 ] && exit 1
-  echo "$res" | grep 'Certificate:' > /dev/null 
+  echo "$res" | grep 'Certificate:' > /dev/null
 }
 
 function test_csr_create { # _discover_domain
@@ -149,8 +207,8 @@ function test_csr_create { # _discover_domain
   [ $? != 0 ] && (echo $res && exit 1)
   [ -f "$VAULT_DIR/com.domain.test/key.pem" ] || exit 1
   [ -f "$VAULT_DIR/com.domain.test/cert.csr" ] || exit 1
-  echo "$res" | grep 'Key created in:' > /dev/null 
-  echo "$res" | grep 'CSR created in:' > /dev/null 
+  echo "$res" | grep 'Key created in:' > /dev/null
+  echo "$res" | grep 'CSR created in:' > /dev/null
 }
 
 function test_csr_sign { # _discover_domain
@@ -191,7 +249,7 @@ function test_csr_view {
   # View the certificate
   res=`csr_view test.domain.com`
   [ $? != 0 ] && exit 1
-  echo "$res" | grep 'Certificate Request:' > /dev/null 
+  echo "$res" | grep 'Certificate Request:' > /dev/null
 }
 
 function test_utils_reverse {
@@ -212,31 +270,20 @@ function test_utils_domain {
   [ $res == 'test' ] || exit 1
 }
 
-test_intermediate() {
-  VAULT_DIR='../tmp/test_intermediate'
-  rm -rf $VAULT_DIR
-  # Generate a certificate authority
-  cacert domain-1.com >/dev/null
-  # Create an intermediate certificates
-  cert domain-2.com domain-1.com >/dev/null
-  cert domain-3.com domain-2.com >/dev/null
-  # # Create a leaf certificate
-  cert domain-4.com domain-3.com >/dev/null
-  # Certificate validation
-  res=`cert_check domain-4.com`
-  [ $? != 0 ] && exit 1
-  echo "$res" | grep 'Certificate is valid.' > /dev/null
-}
-
 tests="""
 test_cacert
+test_cacert__subject_default
+test_cacert__subject_custom
+test_cacert__force_false
+test_cacert__force_true
 test_cacert_view
 test_cert
-test_cert_with_ca_fqdn
+test_cert__with_ca_fqdn
+test_cert__intermediate
 test_cert_check
-test_cert_check_from_file_no_ca_file
-test_cert_check_from_file_with_ca_file
-test_cert_check_from_file_invalid
+test_cert_check_from_file__no_ca_file
+test_cert_check_from_file__with_ca_file
+test_cert_check_from_file__invalid
 test_cert_view
 test_csr_create
 test_csr_sign
@@ -245,7 +292,6 @@ test_csr_view
 test_utils_reverse
 test_utils_tld
 test_utils_domain
-test_intermediate
 """
 
 for test in $tests; do

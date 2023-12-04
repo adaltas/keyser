@@ -27,13 +27,13 @@ string_mask        = utf8only
 
 ####################################################################
 [ ca_distinguished_name ]
-countryName         = FR
-stateOrProvinceName         =
-localityName                = Paris
-organizationName            = ADALTAS
-organizationalUnitName         = 
-commonName         = <commonName>
-emailAddress         = david@adaltas.com
+# countryName                 = FR
+# stateOrProvinceName         = 
+# localityName                = Paris
+# organizationName            = ADALTAS
+# organizationalUnitName         = 
+# commonName         = <commonName>
+# emailAddress         = david@adaltas.com
 
 ####################################################################
 [ ca_extensions ]
