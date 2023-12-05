@@ -1,0 +1,28 @@
+#!/bin/bash
+
+cd `dirname "${BASH_SOURCE}"`
+VAULT_DIR='./vault'
+. ./lib/api.sh
+
+case "$1" in
+  cacert) cacert $2
+    ;;
+  cacert_view) cacert_view $2
+    ;;
+  cert) cert $2
+    ;;
+  cert_check) cert_check $2
+    ;;
+  cert_check_from_file) cert_check_from_file $2
+    ;;
+  cert_view) cert_view $2
+    ;;
+  csr_create) csr_create $2
+    ;;
+  csr_sign) csr_sign $2
+    ;;
+  csr_view) csr_view $2
+    ;;
+  *) help
+    ;;
+esac
