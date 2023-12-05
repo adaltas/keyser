@@ -7,7 +7,7 @@ set -e
 pwd=`dirname "${BASH_SOURCE}"`
 
 init(){
-  VAULT_DIR="${KEYSER_VAULT_DIR:-../vault}"
+  KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-../vault}"
   TMP_DIR="${KEYSER_TMP_DIR:-$VAULT_DIR/.tmp}"
   GPG_MODE="${KEYSER_GPG_MODE}"
   GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
@@ -92,7 +92,7 @@ cacert(){
   # Validation
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cacert; return 1; fi
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   if [ -f "$fqdn_dir/key.pem" ]; then
     if [ -n "$force" ]; then
       rm -r "$fqdn_dir"
@@ -128,9 +128,10 @@ Usage
 """
 }
 cacert_view(){
+  init
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cacert_view; return 1; fi
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   openssl x509 -noout -text -fingerprint \
     -in $fqdn_dir/cert.pem
 }
@@ -147,12 +148,11 @@ Generate the certificate and private key for a give hostname. The command combin
 """
 }
 cert(){
+  init
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert; return 1; fi
   csr_create $fqdn
-  echo csr_create $?
   csr_sign $fqdn $2
-  echo csr_sign $?
 }
 
 help_cert_check(){
@@ -167,9 +167,10 @@ Internally, the command localize the certificate inside its store. Then, it call
 """
 }
 cert_check(){
+  init
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert_check; return 1; fi
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   cert_file=$fqdn_dir/cert.pem
   cacert_file=$fqdn_dir/ca.crt
   cert_check_from_file $cert_file $cacert_file
@@ -188,6 +189,7 @@ the cert_check_from_file command.
 """
 }
 cert_check_from_file(){
+  init
   cert_file=$1
   if [ ! -n "$cert_file" ]; then echo 'Certificate file path is missing from arguments.'; help_cert_check_from_file; return 1; fi
   if [ ! -f $cert_file ]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
@@ -195,7 +197,7 @@ cert_check_from_file(){
   if [ ! -n "$cacert_file" ]; then 
     fqdn=`openssl req -noout -subject -in  $csr_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
     ca_fqdn=${fqdn#*.}
-    ca_fqdn_dir=$VAULT_DIR/$(utils_reverse $ca_fqdn)
+    ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
     cacert_file=$ca_fqdn_dir/cert.pem
   fi
   openssl verify \
@@ -223,11 +225,12 @@ Print the detailed information of a Certificate Signing Request (CSR) file.
 """
 }
 cert_view(){
+  init
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert_view; return 1; fi
   # tld=${fqdn#*.}
   # hostname=${fqdn%%.*}
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   #domain=`openssl x509 -noout -subject -in ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
   #shortname=${fqdn%".$domain"}
   # shortname=`echo $1 | sed 's/\([[:alnum:]]\)\..*/\1/'`
@@ -247,10 +250,11 @@ Generate a key and its certificate signing request.
 """
 }
 csr_create(){
+  init
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_create; return 1; fi
-  # domain=`openssl x509 -noout -subject -in $VAULT_DIR/ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
+  # domain=`openssl x509 -noout -subject -in $KEYSER_VAULT_DIR/ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
   mkdir -m 700 -p $fqdn_dir
@@ -276,9 +280,10 @@ Generate a certificate signing request (CSR) for a managed FQDN. Internally, it 
 """
 }
 csr_sign(){
+  init
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_sign; return 1; fi
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   csr_sign_from_file $fqdn_dir/cert.csr $2
 }
 
@@ -294,6 +299,7 @@ Generate a certificate signing request (CSR) for a given file. The Certificate A
 """
 }
 csr_sign_from_file(){
+  init
   csr_file=$1
   if [ ! -f $csr_file ]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
   fqdn=`openssl req -noout -subject -in  $csr_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
@@ -301,8 +307,8 @@ csr_sign_from_file(){
   if [ ! -n "$ca_fqdn" ]; then 
     ca_fqdn=${fqdn#*.}
   fi
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
-  ca_fqdn_dir=$VAULT_DIR/$(utils_reverse $ca_fqdn)
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
   # Place a copy of the CSR file
   if [ $csr_file != "$fqdn_dir/${csr_file##*/}" ]; then
     cp -rp $csr_file $fqdn_dir/${csr_file##*/}
@@ -343,9 +349,10 @@ Print the detailed information of a Certificate Signing Request (CSR) stored ins
 """
 }
 csr_view(){
+  init
   fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_view; return 1; fi
-  fqdn_dir=$VAULT_DIR/$(utils_reverse $fqdn)
+  fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   if [ ! -f "$fqdn_dir/cert.csr" ]; then echo "CSR file for domain \"$fqdn\" does not exist."; help_csr_view; return 1; fi
   openssl req -noout -text \
     -in $fqdn_dir/cert.csr
