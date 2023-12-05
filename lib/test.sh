@@ -23,7 +23,7 @@ function test_cacert__subject_default {
   # Generate a certificate authority
   cacert domain.com > /dev/null
   res=`openssl x509 -noout -subject -in $VAULT_DIR/com.domain/cert.pem`
-  echo "$res" | grep 'subject=C = FR, O = Adaltas, L = Paris, CN = domain.com, emailAddress = no-reply@adaltas.com' > /dev/null
+  echo "$res" | grep 'subject=C=FR, O=Adaltas, L=Paris, CN=domain.com, emailAddress=no-reply@adaltas.com' > /dev/null
 }
 
 function test_cacert__subject_custom {
@@ -32,7 +32,7 @@ function test_cacert__subject_custom {
   # Generate a certificate authority
   cacert -c PL -o "My Domain" -l Warsawa -e no-reply@domain.com domain.com > /dev/null
   res=`openssl x509 -noout -subject -in $VAULT_DIR/com.domain/cert.pem`
-  echo "$res" | grep 'subject=C = PL, O = My Domain, L = Warsawa, CN = domain.com, emailAddress = no-reply@domain.com' > /dev/null
+  echo "$res" | grep 'subject=C=PL, O=My Domain, L=Warsawa, CN=domain.com, emailAddress=no-reply@domain.com' > /dev/null
 }
 
 function test_cacert__force_false {
@@ -68,7 +68,7 @@ function test_cacert_view {
   res=`cacert_view domain.com`
   [ $? != 0 ] && exit 1
   echo "$res" | grep 'Certificate:' > /dev/null
-  echo "$res" | grep 'Subject: C = FR, O = Adaltas, L = Paris, CN = domain.com, emailAddress = no-reply@adaltas.com' > /dev/null
+  echo "$res" | grep 'Subject: C=FR, O=Adaltas, L=Paris, CN=domain.com, emailAddress=no-reply@adaltas.com' > /dev/null
 }
 
 function test_cert {
