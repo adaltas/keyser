@@ -10,9 +10,25 @@ function test_cacert {
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
   res=`cacert domain.com`
+  [ $? != 0 ] && exit 1
   [ -f "$KEYSER_VAULT_DIR/com.domain/cert.pem" ] || exit 1
   [ -f "$KEYSER_VAULT_DIR/com.domain/key.pem" ] || exit 1
+  echo "$res" | grep 'Certificate key created:' > /dev/null
+  echo "$res" | grep 'Certificate authority created:' > /dev/null
+}
+
+function test_cacert__gpg {
+  KEYSER_VAULT_DIR='../tmp/test_cacert__gpg'
+  KEYSER_GPG_MODE=symmetric
+  KEYSER_GPG_PASSPHRASE=secret
+  . api.sh
+  rm -rf $KEYSER_VAULT_DIR
+  # Generate a certificate authority
+  res=`cacert domain.com`
   [ $? != 0 ] && exit 1
+  [ -f "$KEYSER_VAULT_DIR/com.domain/cert.pem" ] || exit 1
+  [ -f "$KEYSER_VAULT_DIR/com.domain/key.pem" ] && exit 1
+  [ -f "$KEYSER_VAULT_DIR/com.domain/key.pem.gpg" ] || exit 1
   echo "$res" | grep 'Certificate key created:' > /dev/null
   echo "$res" | grep 'Certificate authority created:' > /dev/null
 }
@@ -61,6 +77,20 @@ function test_cacert__force_true {
 
 function test_cacert_view {
   KEYSER_VAULT_DIR='../tmp/test_cacert_view'
+  rm -rf $KEYSER_VAULT_DIR
+  # Generate a certificate authority
+  cacert domain.com > /dev/null
+  # Validate certificate
+  res=`cacert_view domain.com`
+  [ $? != 0 ] && exit 1
+  echo "$res" | grep 'Certificate:' > /dev/null
+  echo "$res" | grep 'Subject: C=FR, O=Adaltas, L=Paris, CN=domain.com, emailAddress=no-reply@adaltas.com' > /dev/null
+}
+
+function test_cacert_view__gpg {
+  KEYSER_VAULT_DIR='../tmp/test_cacert_view__gpg'
+  KEYSER_GPG_MODE=symmetric
+  KEYSER_GPG_PASSPHRASE=secret
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
   cacert domain.com > /dev/null
@@ -211,6 +241,23 @@ function test_csr_create { # _discover_domain
   echo "$res" | grep 'CSR created in:' > /dev/null
 }
 
+function test_csr_create__gpg { # _discover_domain
+  KEYSER_VAULT_DIR='../tmp/test_csr_create__gpg'
+  KEYSER_GPG_MODE=symmetric
+  KEYSER_GPG_PASSPHRASE=secret
+  rm -rf $KEYSER_VAULT_DIR
+  # Generate a certificate authority
+  cacert domain.com >/dev/null
+  # Create a certificate
+  res=`csr_create test.domain.com`
+  [ $? != 0 ] && (echo $res && exit 1)
+  [ -f "$KEYSER_VAULT_DIR/com.domain.test/key.pem" ] && exit 1
+  [ -f "$KEYSER_VAULT_DIR/com.domain.test/key.pem.gpg" ] || exit 1
+  [ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.csr" ] || exit 1
+  echo "$res" | grep 'Key created in:' > /dev/null
+  echo "$res" | grep 'CSR created in:' > /dev/null
+}
+
 function test_csr_sign { # _discover_domain
   KEYSER_VAULT_DIR='../tmp/test_csr_sign'
   rm -rf $KEYSER_VAULT_DIR
@@ -222,6 +269,23 @@ function test_csr_sign { # _discover_domain
   res=`csr_sign test.domain.com`
   [ $? != 0 ] && exit 1
   [ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem" ] || exit 1
+  echo "$res" | grep 'Certificate created in:' > /dev/null
+}
+
+function test_csr_sign__gpg {
+  KEYSER_VAULT_DIR='../tmp/test_csr_sign__gpg'
+  KEYSER_GPG_MODE=symmetric
+  KEYSER_GPG_PASSPHRASE=secret
+  rm -rf $KEYSER_VAULT_DIR
+  # Generate a certificate authority
+  cacert domain.com >/dev/null
+  # Create a certificate
+  csr_create test.domain.com >/dev/null
+  # Sign the certificate
+  res=`csr_sign test.domain.com`
+  [ $? != 0 ] && exit 1
+  [ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem" ] || exit 1
+  # [ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem.gpg" ] || exit 1
   echo "$res" | grep 'Certificate created in:' > /dev/null
 }
 
@@ -272,11 +336,13 @@ function test_utils_domain {
 
 tests="""
 test_cacert
+test_cacert__gpg
 test_cacert__subject_default
 test_cacert__subject_custom
 test_cacert__force_false
 test_cacert__force_true
 test_cacert_view
+test_cacert_view__gpg
 test_cert
 test_cert__with_ca_fqdn
 test_cert__intermediate
@@ -286,7 +352,9 @@ test_cert_check_from_file__with_ca_file
 test_cert_check_from_file__invalid
 test_cert_view
 test_csr_create
+test_csr_create__gpg
 test_csr_sign
+test_csr_sign__gpg
 test_csr_sign_from_file
 test_csr_view
 test_utils_reverse

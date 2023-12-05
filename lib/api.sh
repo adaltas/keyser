@@ -8,9 +8,19 @@ pwd=`dirname "${BASH_SOURCE}"`
 
 init(){
   KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-../vault}"
-  TMP_DIR="${KEYSER_TMP_DIR:-$VAULT_DIR/.tmp}"
-  GPG_MODE="${KEYSER_GPG_MODE}"
-  GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
+  KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
+  KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
+  # Validation
+  if [ -n "$KEYSER_GPG_MODE" ] && [ $KEYSER_GPG_MODE != "symmetric" ]; then
+    >&2 echo 'Invalid GPG mode, use "symmetric" or leave it empty to disable encryption.'
+    help
+    return 1
+  fi
+  # Storage preparation
+  if [ ! -d $KEYSER_VAULT_DIR ]; then
+    mkdir -m 700 -p $KEYSER_VAULT_DIR
+    # echo '*.pem' > .gitignore
+  fi
 }
 
 help(){
@@ -30,16 +40,26 @@ Available Commands:
   keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
   keyser csr_view <fqdn>
 
-Example
+Environment variables
+  KEYSER_VAULT_DIR       Keys directory storage location.
+  KEYSER_GPG_MODE        Use "symmetric" or leave empty for no encryption.
+  KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption.
+
+Example to view a certificate
   keyser cacert domain.com
   keyser cert test.domain.com
   keyser cert_view test.domain.com
 
-Example with intermediate certifixate
+Example with intermediate certificate
   keyser cacert domain-1.com
   keyser cert domain-2.com domain-1.com
   keyser cert domain-3.com domain-2.com
   keyser cert_check_from_file test.domain.com ./vault/com/domain-3/cert.pem ./vault/com/domain-3/ca.crt
+
+Example with symetric encryption
+  export KEYSER_GPG_MODE=symmetric
+  export KEYSER_GPG_PASSPHRASE=secret
+  keyser cacert domain-1.com
 
 """
 }
@@ -101,7 +121,7 @@ cacert(){
     fi
   fi
   # Prepare configuration template
-  mkdir -m 700 -p $fqdn_dir
+  mkdir -m 700 $fqdn_dir
   cp -rp $pwd/ca.cnf $fqdn_dir/ca.cnf
   sed -i "s|<commonName>|$fqdn|" $fqdn_dir/ca.cnf
   # RSA Private key (create "ca.key.pem")
@@ -114,8 +134,14 @@ cacert(){
     -subj "/C=$country/O=$organization/L=$location/CN=$fqdn/emailAddress=$email" \
     -key $fqdn_dir/key.pem -days 7300 \
     -out $fqdn_dir/cert.pem
-  echo 'Certificate key created:' $fqdn_dir/key.pem
   echo 'Certificate authority created:' $fqdn_dir/cert.pem
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo 'Certificate key created:' $fqdn_dir/key.pem
+  else
+    utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
+    rm $fqdn_dir/key.pem
+    echo 'Certificate key created:' $fqdn_dir/key.pem.gpg
+  fi
 }
 
 help_cacert_view(){
@@ -258,13 +284,23 @@ csr_create(){
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
   mkdir -m 700 -p $fqdn_dir
+  if [ -n "$KEYSER_GPG_MODE" ]; then
+    # [ -f "$fqdn_dir/key.pem" ] && rm $fqdn_dir/key.pem
+    utils_decrypt $fqdn_dir/key.pem.gpg $fqdn_dir/key.pem > /dev/null
+  fi
   openssl req -newkey rsa:2048 -sha256 -nodes \
     -out $fqdn_dir/cert.csr \
     -keyout $fqdn_dir/key.pem \
     -subj "/C=FR/O=ADALTAS.CLOUD/L=Paris/CN=${fqdn}" \
     2>/dev/null
   [ $? != 0 ] && return 1
-  echo 'Key created in:' $fqdn_dir/key.pem
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo 'Key created in:' $fqdn_dir/key.pem
+  else
+    utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
+    rm $fqdn_dir/key.pem
+    echo 'Key created in:' $fqdn_dir/key.pem.gpg
+  fi
   echo 'CSR created in:' $fqdn_dir/cert.csr
 }
 
@@ -323,6 +359,10 @@ csr_sign_from_file(){
     cat $ca_fqdn_dir/cert.pem >> $fqdn_dir/ca.crt
   fi
   # Sign the CSR
+  if [ -n "$KEYSER_GPG_MODE" ]; then
+    [ -f "$ca_fqdn_dir/key.pem" ] && rm $ca_fqdn_dir/key.pem
+    utils_decrypt $ca_fqdn_dir/key.pem.gpg $ca_fqdn_dir/key.pem > /dev/null
+  fi
   error=$(
     openssl x509 -req -sha256 -days 7300 \
       -CA $ca_fqdn_dir/cert.pem -CAkey $ca_fqdn_dir/key.pem \
@@ -332,7 +372,11 @@ csr_sign_from_file(){
       -out $fqdn_dir/cert.pem \
       2>&1 >/dev/null
   )
-  if [ $? != 0 ]; then echo $error; return 1; fi
+  local exit_code=$?
+  if [ -n "$KEYSER_GPG_MODE" ]; then
+    rm $ca_fqdn_dir/key.pem
+  fi
+  if [ $exit_code != 0 ]; then echo $error; return 1; fi
   echo 'Certificate authority in:' $fqdn_dir/ca.crt
   echo 'Certificate created in:' $fqdn_dir/cert.pem
 }
@@ -377,4 +421,30 @@ utils_tld(){
 utils_domain(){
   local fqdn=$1
   echo -n ${fqdn%%.*}
+}
+utils_encrypt(){
+  local source=$1
+  local target=$2
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo $source
+  elif [ $KEYSER_GPG_MODE == "symmetric" ]; then
+    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --symmetric $source
+    [ $? != 0 ] && echo 'GPG command failed' && return 1
+    echo $target
+  else
+    return 1
+  fi
+}
+
+utils_decrypt(){
+  local source=$1
+  local target=$2
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo $source
+  elif [ $KEYSER_GPG_MODE == "symmetric" ]; then
+    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --decrypt $source 2>/dev/null
+    echo $target
+  else
+    return 1
+  fi
 }
