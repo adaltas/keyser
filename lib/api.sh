@@ -5,7 +5,13 @@ set -e
 # http://users.skynet.be/pascalbotte/art/server-cert.htm: ca serial and pks store
 
 pwd=`dirname "${BASH_SOURCE}"`
-VAULT_DIR="${VAULT_DIR:-'../vault'}"
+
+init(){
+  VAULT_DIR="${KEYSER_VAULT_DIR:-../vault}"
+  TMP_DIR="${KEYSER_TMP_DIR:-$VAULT_DIR/.tmp}"
+  GPG_MODE="${KEYSER_GPG_MODE}"
+  GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
+}
 
 help(){
   echo """
@@ -56,6 +62,7 @@ Options
 """
 }
 cacert(){
+  init
   # Parse flags
   country='FR'
   organization="Adaltas"
