@@ -2,7 +2,7 @@
 
 # set -e
 cd `dirname "${BASH_SOURCE}"`
-. ../lib/api.sh
+. ../keyser
 
 function test_cert_check_from_file__no_ca_file {
   KEYSER_VAULT_DIR='../tmp/test_cert_check_from_file__no_ca_file'

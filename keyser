@@ -1,28 +1,531 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
-VAULT_DIR='./vault'
-. ./lib/api.sh
+set -e
+pwd=`dirname "${BASH_SOURCE}"`
 
-case "$1" in
-  cacert) cacert $2
-    ;;
-  cacert_view) cacert_view $2
-    ;;
-  cert) cert $2
-    ;;
-  cert_check) cert_check $2
-    ;;
-  cert_check_from_file) cert_check_from_file $2
-    ;;
-  cert_view) cert_view $2
-    ;;
-  csr_create) csr_create $2
-    ;;
-  csr_sign) csr_sign $2
-    ;;
-  csr_view) csr_view $2
-    ;;
-  *) help
-    ;;
-esac
+init(){
+  KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-../vault}"
+  KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
+  KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
+  # Validation
+  if [ -n "$KEYSER_GPG_MODE" ] && [ $KEYSER_GPG_MODE != "symmetric" ]; then
+    >&2 echo 'Invalid GPG mode, use "symmetric" or leave it empty to disable encryption.'
+    help
+    return 1
+  fi
+  # Storage preparation
+  if [ ! -d $KEYSER_VAULT_DIR ]; then
+    mkdir -m 700 -p $KEYSER_VAULT_DIR
+    # echo '*.pem' > .gitignore
+  fi
+}
+
+help(){
+  echo """
+Usage:
+  keyser <command>
+
+Available Commands:
+  keyser cacert <fqdn>
+  keyser cacert_view <fqdn>
+  keyser cert <fqdn> [<ca_fqdn>]
+  keyser cert_check <fqdn> [<cacert_file>]
+  keyser cert_check_from_file <cert_file> [<cacert_file>]
+  keyser cert_view <fqdn>
+  keyser csr_create <fqdn>
+  keyser csr_sign <fqdn> [<ca_fqdn>]
+  keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
+  keyser csr_view <fqdn>
+
+Environment variables
+  KEYSER_VAULT_DIR       Keys directory storage location.
+  KEYSER_GPG_MODE        Use "symmetric" or leave empty for no encryption.
+  KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption.
+
+Example to view a certificate
+  keyser cacert domain.com
+  keyser cert test.domain.com
+  keyser cert_view test.domain.com
+
+Example with intermediate certificate
+  keyser cacert domain-1.com
+  keyser cert domain-2.com domain-1.com
+  keyser cert domain-3.com domain-2.com
+  keyser cert_check_from_file test.domain.com ./vault/com/domain-3/cert.pem ./vault/com/domain-3/ca.crt
+
+Example with symetric encryption
+  export KEYSER_GPG_MODE=symmetric
+  export KEYSER_GPG_PASSPHRASE=secret
+  keyser cacert domain-1.com
+
+"""
+}
+
+help_cacert(){
+  echo """
+Description
+  Create a certificate authority.
+
+Usage
+  keyser cacert [-cfole] <fqdn>
+
+Options
+  -c=<country>      Country of the issuer, default is "FR".
+  -e=<email>        Email of the issuer, default is "no-reply@adaltas.com".
+  -f                Overwrite existing certificate files if present.
+  -h                Print the command help.
+  -l=<location>     Location of the issuer, default is "Paris".
+  -o=<organization> Organization of the issuer, default is "Adaltas".
+"""
+}
+cacert(){
+  init
+  # Parse flags
+  local country='FR'
+  local organization="Adaltas"
+  local location="Paris"
+  local email="no-reply@adaltas.com"
+  while getopts ":c:e:fho:l:" option; do
+    case $option in
+      c)
+        country="$OPTARG";;
+      e)
+        email="$OPTARG";;
+      f)
+        force=1;;
+      h)
+        help=1;;
+      l)
+        location="$OPTARG";;
+      o)
+        organization="$OPTARG";;
+      \?)
+        echo "$OPTARG : option invalide"
+        return 1;;
+    esac
+  done
+  shift $((OPTIND-1))
+  if [ -n "$help" ]; then help_cacert; return 0; fi
+  # Validation
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cacert; return 1; fi
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  if [ -f "$fqdn_dir/key.pem" ]; then
+    if [ -n "$force" ]; then
+      rm -r "$fqdn_dir"
+    else
+      echo 'CA certificate files already exists.'; help; return 1;
+    fi
+  fi
+  # Prepare configuration template
+  mkdir -m 700 $fqdn_dir
+  # cp -rp $pwd/lib/ca.cnf $fqdn_dir/ca.cnf
+  utils_write_ca_cnf $fqdn_dir/ca.cnf
+  sed -i "s|<commonName>|$fqdn|" $fqdn_dir/ca.cnf
+  # RSA Private key (create "ca.key.pem")
+  openssl genrsa -out $fqdn_dir/key.pem 2048
+  # Self-signed (with the key previously generated) root CA certificate (create "ca.crt.pem")
+  # man: The req command primarily creates and processes certificate requests in PKCS#10 format.
+  # "/C=FR/ST=IDF/L=Paris/O=Adaltas/CN=adaltas.com/emailAddress=david@adaltas.com"
+  openssl req -x509 -new -sha256 \
+    -config $fqdn_dir/ca.cnf \
+    -subj "/C=$country/O=$organization/L=$location/CN=$fqdn/emailAddress=$email" \
+    -key $fqdn_dir/key.pem -days 7300 \
+    -out $fqdn_dir/cert.pem
+  echo 'Certificate authority created:' $fqdn_dir/cert.pem
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo 'Certificate key created:' $fqdn_dir/key.pem
+  else
+    utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
+    rm $fqdn_dir/key.pem
+    echo 'Certificate key created:' $fqdn_dir/key.pem.gpg
+  fi
+}
+
+help_cacert_view(){
+  echo """
+Description
+  Print a certificate authority.
+
+Usage
+  keyser cacert_view <fqdn>
+"""
+}
+cacert_view(){
+  init
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cacert_view; return 1; fi
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  openssl x509 -noout -text -fingerprint \
+    -in $fqdn_dir/cert.pem
+}
+
+help_cert(){
+  echo """
+Description
+  Generate a certificate.
+
+Usage
+  keyser cert <fqdn> [<ca_fqdn>]
+
+Generate the certificate and private key for a give hostname. The command combine the csr_create and csr_sign commands for conveniency.
+"""
+}
+cert(){
+  init
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert; return 1; fi
+  csr_create $fqdn
+  csr_sign $fqdn $2
+}
+
+help_cert_check(){
+  echo """
+Description
+  Check a hostname certificate against the certificate authority.
+
+Usage
+  keyser cert_check <fqdn> [<cacert_file>]
+
+Internally, the command localize the certificate inside its store. Then, it call the cert_check_from_file command.
+"""
+}
+cert_check(){
+  init
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert_check; return 1; fi
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  local cert_file=$fqdn_dir/cert.pem
+  local cacert_file=$fqdn_dir/ca.crt
+  cert_check_from_file $cert_file $cacert_file
+}
+
+help_cert_check_from_file(){
+  echo """
+Description
+  Check a hostname certificate against the certificate authority.
+
+Usage
+  keyser cert_check_from_file <cert_file> [<cacert_file>]
+
+Internally, the command localize the certificate inside its store. Then, it call
+the cert_check_from_file command.
+"""
+}
+cert_check_from_file(){
+  init
+  local cert_file=$1
+  if [ ! -n "$cert_file" ]; then echo 'Certificate file path is missing from arguments.'; help_cert_check_from_file; return 1; fi
+  if [ ! -f $cert_file ]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
+  local cacert_file=$2
+  if [ ! -n "$cacert_file" ]; then 
+    local fqdn=`openssl x509 -noout -subject -in  $cert_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
+    local ca_fqdn=${fqdn#*.}
+    local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
+    cacert_file=$ca_fqdn_dir/cert.pem
+  fi
+  openssl verify \
+    -CAfile $cacert_file \
+    $cert_file \
+    >/dev/null \
+    2>&1
+  if [ $? == 0 ]; then
+    echo 'Certificate is valid.'
+  else
+    echo 'Certificate is not valid.'
+    return 1
+  fi
+}
+
+help_cert_view(){
+  echo """
+Description
+  Print a certificate.
+
+Usage
+  keyser cert_view <fqdn>
+
+Print the detailed information of a Certificate Signing Request (CSR) file.
+"""
+}
+cert_view(){
+  init
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_cert_view; return 1; fi
+  # tld=${fqdn#*.}
+  # hostname=${fqdn%%.*}
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  #domain=`openssl x509 -noout -subject -in ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
+  #shortname=${fqdn%".$domain"}
+  # shortname=`echo $1 | sed 's/\([[:alnum:]]\)\..*/\1/'`
+  openssl x509 -text -fingerprint \
+    -in $fqdn_dir/cert.pem
+}
+
+help_csr_create(){
+  echo """
+Description
+  Create a certificate signing request.
+
+Usage
+  keyser csr_create <fqdn>
+
+Generate a key and its certificate signing request.
+"""
+}
+csr_create(){
+  init
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_create; return 1; fi
+  # domain=`openssl x509 -noout -subject -in $KEYSER_VAULT_DIR/ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
+  # Sign the CSR (create "hadoop.cert.pem")
+  mkdir -m 700 -p $fqdn_dir
+  if [ -n "$KEYSER_GPG_MODE" ]; then
+    # [ -f "$fqdn_dir/key.pem" ] && rm $fqdn_dir/key.pem
+    utils_decrypt $fqdn_dir/key.pem.gpg $fqdn_dir/key.pem > /dev/null
+  fi
+  openssl req -newkey rsa:2048 -sha256 -nodes \
+    -out $fqdn_dir/cert.csr \
+    -keyout $fqdn_dir/key.pem \
+    -subj "/C=FR/O=ADALTAS.CLOUD/L=Paris/CN=${fqdn}" \
+    2>/dev/null
+  [ $? != 0 ] && return 1
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo 'Key created in:' $fqdn_dir/key.pem
+  else
+    utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
+    rm $fqdn_dir/key.pem
+    echo 'Key created in:' $fqdn_dir/key.pem.gpg
+  fi
+  echo 'CSR created in:' $fqdn_dir/cert.csr
+}
+
+help_csr_sign(){
+  echo """
+Description
+  Sign a CSR givent its path.
+
+Usage
+  keyser csr_sign <fqdn> [<ca_fqdn>]
+
+Generate a certificate signing request (CSR) for a managed FQDN. Internally, it calls the "csr_sign_from_file" command.
+"""
+}
+csr_sign(){
+  init
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_sign; return 1; fi
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  csr_sign_from_file $fqdn_dir/cert.csr $2
+}
+
+help_csr_sign_from_file(){
+  echo """
+Description
+  Sign a CSR givent its path.
+
+Usage
+  keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
+
+Generate a certificate signing request (CSR) for a given file. The Certificate Authority FQDN is optionnal. When not provided, it is extracted from the CSR subject.
+"""
+}
+csr_sign_from_file(){
+  init
+  local csr_file=$1
+  if [ ! -f $csr_file ]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
+  local fqdn=`openssl req -noout -subject -in  $csr_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
+  local ca_fqdn=$2
+  if [ ! -n "$ca_fqdn" ]; then 
+    ca_fqdn=${fqdn#*.}
+  fi
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
+  # Place a copy of the CSR file
+  if [ $csr_file != "$fqdn_dir/${csr_file##*/}" ]; then
+    cp -rp $csr_file $fqdn_dir/${csr_file##*/}
+  fi
+  # Copy the certificate authority
+  # Note, naming is inspired by ipa
+  if [ -f $ca_fqdn_dir/cert.pem ]; then
+    echo '' > $fqdn_dir/ca.crt
+    if [ -f $ca_fqdn_dir/ca.crt ]; then
+      cat $ca_fqdn_dir/ca.crt >> $fqdn_dir/ca.crt
+    fi
+    cat $ca_fqdn_dir/cert.pem >> $fqdn_dir/ca.crt
+  fi
+  # Sign the CSR
+  if [ -n "$KEYSER_GPG_MODE" ]; then
+    [ -f "$ca_fqdn_dir/key.pem" ] && rm $ca_fqdn_dir/key.pem
+    utils_decrypt $ca_fqdn_dir/key.pem.gpg $ca_fqdn_dir/key.pem > /dev/null
+  fi
+  utils_write_sign_cnf $fqdn_dir/sign.cnf
+  error=$(
+    openssl x509 -req -sha256 -days 7300 \
+      -CA $ca_fqdn_dir/cert.pem -CAkey $ca_fqdn_dir/key.pem \
+      -CAcreateserial -CAserial $ca_fqdn_dir/ca.seq \
+      -extfile $fqdn_dir/sign.cnf \
+      -in $csr_file \
+      -out $fqdn_dir/cert.pem \
+      2>&1 >/dev/null
+  )
+  local exit_code=$?
+  if [ -n "$KEYSER_GPG_MODE" ]; then
+    rm $ca_fqdn_dir/key.pem
+  fi
+  if [ $exit_code != 0 ]; then echo $error; return 1; fi
+  echo 'Certificate authority in:' $fqdn_dir/ca.crt
+  echo 'Certificate created in:' $fqdn_dir/cert.pem
+}
+
+help_csr_view(){
+  echo """
+Description
+  Print a CSR.
+
+Usage
+  keyser csr_view <fqdn>
+
+Print the detailed information of a Certificate Signing Request (CSR) stored inside the vault.
+"""
+}
+csr_view(){
+  init
+  local fqdn=$1
+  if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_view; return 1; fi
+  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  if [ ! -f "$fqdn_dir/cert.csr" ]; then echo "CSR file for domain \"$fqdn\" does not exist."; help_csr_view; return 1; fi
+  openssl req -noout -text \
+    -in $fqdn_dir/cert.csr
+}
+
+utils_reverse(){
+  IFS=. read -ra line <<< "$1"
+  let x=${#line[@]}-1;
+  while [ "$x" -ge 0 ]; do
+    echo -n "${line[$x]}";
+    [ $x != 0 ] && echo -n '.';
+    let x--;
+    echo -n ''
+  done
+}
+
+utils_tld(){
+  local fqdn=$1
+  echo -n ${fqdn#*.}
+}
+
+utils_domain(){
+  local fqdn=$1
+  echo -n ${fqdn%%.*}
+}
+utils_encrypt(){
+  local source=$1
+  local target=$2
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo $source
+  elif [ $KEYSER_GPG_MODE == "symmetric" ]; then
+    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --symmetric $source
+    [ $? != 0 ] && echo 'GPG command failed' && return 1
+    echo $target
+  else
+    return 1
+  fi
+}
+
+utils_decrypt(){
+  local source=$1
+  local target=$2
+  if [ ! -n "$KEYSER_GPG_MODE" ]; then
+    echo $source
+  elif [ $KEYSER_GPG_MODE == "symmetric" ]; then
+    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --decrypt $source 2>/dev/null
+    echo $target
+  else
+    return 1
+  fi
+}
+
+utils_write_ca_cnf(){
+  cat <<-'EOF' >$1
+	HOME            = .
+	RANDFILE        = $ENV::HOME/rnd
+	
+	####################################################################
+	[ ca ]
+	default_ca    = CA_default      # The default ca section
+	
+	[ CA_default ]
+	
+	default_days     = 1000         # How long to certify for
+	default_crl_days = 30           # How long before next CRL
+	default_md       = sha256       # Use public key default MD
+	preserve         = no           # Keep passed DN ordering
+	
+	x509_extensions = ca_extensions # The extensions to add to the cert
+	
+	email_in_dn     = no            # Don't concat the email in the DN
+	copy_extensions = copy          # Required to copy SANs from CSR to cert
+	
+	####################################################################
+	[ req ]
+	default_bits       = 2048
+	default_keyfile    = cakey.pem
+	distinguished_name = ca_distinguished_name
+	x509_extensions    = ca_extensions
+	string_mask        = utf8only
+	
+	####################################################################
+	[ ca_distinguished_name ]
+	# countryName                 = FR
+	# stateOrProvinceName         = 
+	# localityName                = Paris
+	# organizationName            = ADALTAS
+	# organizationalUnitName         = 
+	# commonName         = <commonName>
+	# emailAddress         = david@adaltas.com
+	
+	####################################################################
+	[ ca_extensions ]
+	
+	subjectKeyIdentifier   = hash
+	authorityKeyIdentifier = keyid:always, issuer
+	basicConstraints       = critical, CA:true
+	keyUsage               = keyCertSign, cRLSign
+	EOF
+}
+
+utils_write_sign_cnf(){
+  cat <<-'EOF' > $1
+	subjectKeyIdentifier=hash
+	authorityKeyIdentifier=keyid,issuer
+	basicConstraints=critical,CA:TRUE,pathlen:1
+	EOF
+}
+
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  case "$1" in
+    cacert) cacert $2
+      ;;
+    cacert_view) cacert_view $2
+      ;;
+    cert) cert $2
+      ;;
+    cert_check) cert_check $2
+      ;;
+    cert_check_from_file) cert_check_from_file $2
+      ;;
+    cert_view) cert_view $2
+      ;;
+    csr_create) csr_create $2
+      ;;
+    csr_sign) csr_sign $2
+      ;;
+    csr_view) csr_view $2
+      ;;
+    *) help
+      ;;
+  esac
+fi

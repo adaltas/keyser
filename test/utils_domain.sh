@@ -2,7 +2,7 @@
 
 # set -e
 cd `dirname "${BASH_SOURCE}"`
-. ../lib/api.sh
+. ../keyser
 
 function test_utils_domain {
   res=`utils_domain test.domain.com`

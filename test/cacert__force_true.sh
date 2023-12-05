@@ -2,7 +2,7 @@
 
 # set -e
 cd `dirname "${BASH_SOURCE}"`
-. ../lib/api.sh
+. ../keyser
 
 function test_cacert__force_true {
   KEYSER_VAULT_DIR='../tmp/test_cacert__force_false'

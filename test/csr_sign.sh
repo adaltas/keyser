@@ -2,7 +2,7 @@
 
 # set -e
 cd `dirname "${BASH_SOURCE}"`
-. ../lib/api.sh
+. ../keyser
 
 function test_csr_sign { # _discover_domain
   KEYSER_VAULT_DIR='../tmp/test_csr_sign'

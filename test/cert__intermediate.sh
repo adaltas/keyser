@@ -2,7 +2,7 @@
 
 # set -e
 cd `dirname "${BASH_SOURCE}"`
-. ../lib/api.sh
+. ../keyser
 
 test_cert__intermediate() {
   KEYSER_VAULT_DIR='../tmp/test_cert__intermediate'
