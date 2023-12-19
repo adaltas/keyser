@@ -26,16 +26,17 @@ Usage:
   keyser <command>
 
 Available Commands:
-  keyser cacert <fqdn>
-  keyser cacert_view <fqdn>
-  keyser cert <fqdn> [<ca_fqdn>]
-  keyser cert_check <fqdn> [<cacert_file>]
-  keyser cert_check_from_file <cert_file> [<cacert_file>]
-  keyser cert_view <fqdn>
-  keyser csr_create <fqdn>
-  keyser csr_sign <fqdn> [<ca_fqdn>]
-  keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
-  keyser csr_view <fqdn>
+  cacert <fqdn>
+  cacert_view <fqdn>
+  cert <fqdn> [<ca_fqdn>]
+  cert_check <fqdn> [<cacert_file>]
+  cert_check_from_file <cert_file> [<cacert_file>]
+  cert_view <fqdn>
+  csr_create <fqdn>
+  csr_sign <fqdn> [<ca_fqdn>]
+  csr_sign_from_file <csr_file> [<ca_fqdn>]
+  csr_view <fqdn>
+  version
 
 Environment variables:
   KEYSER_VAULT_DIR       Keys directory storage location.
