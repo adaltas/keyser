@@ -317,8 +317,11 @@ csr_sign(){
   init
   local fqdn=$1
   if [ ! -n "$fqdn" ]; then echo 'FQDN is missing from arguments.'; help_csr_sign; return 1; fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  csr_sign_from_file $fqdn_dir/cert.csr $2
+  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)"
+  local csr_file="$fqdn_dir/cert.csr"
+  if [ ! -f $csr_file ]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign; return 1; fi
+  csr_sign_from_file $csr_file $2
+  rm $csr_file
 }
 
 help_csr_sign_from_file(){
