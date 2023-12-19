@@ -404,6 +404,10 @@ csr_view(){
     -in $fqdn_dir/cert.csr
 }
 
+version(){
+  echo 'Keyser version "0.0.0".'
+}
+
 utils_reverse(){
   IFS=. read -ra line <<< "$1"
   let x=${#line[@]}-1;
@@ -527,6 +531,8 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     csr_sign) csr_sign $2
       ;;
     csr_view) csr_view $2
+      ;;
+    version) version $2
       ;;
     *) help
       ;;
