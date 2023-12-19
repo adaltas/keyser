@@ -4,7 +4,7 @@ set -e
 pwd=`dirname "${BASH_SOURCE}"`
 
 init(){
-  KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-../vault}"
+  KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-./vault}"
   KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
   KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
   # Validation
