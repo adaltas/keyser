@@ -4,7 +4,7 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_csr_create__gpg { # _discover_domain
+function test_csr_create__gpg {
   KEYSER_VAULT_DIR='../tmp/test_csr_create__gpg'
   KEYSER_GPG_MODE=symmetric
   KEYSER_GPG_PASSPHRASE=secret
