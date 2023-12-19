@@ -21,6 +21,15 @@ chmod u+x keyser
 ./keyser
 ```
 
+Add Keyser to your path and set the appropriate environment variables. For example, to enable GPG authentication:
+
+```bash
+export PATH=~/projects/keyser:$PATH
+export KEYSER_VAULT_DIR=~/assets/vault
+export KEYSER_GPG_MODE=symmetric
+export KEYSER_GPG_PASSPHRASE=MySecret
+```
+
 ## Usage
 
 Run the `./keyser` command without any argument to print detailed information.
