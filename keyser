@@ -310,7 +310,7 @@ Description
 Usage
   keyser csr_sign <fqdn> [<ca_fqdn>]
 
-Generate a certificate signing request (CSR) for a managed FQDN. Internally, it calls the "csr_sign_from_file" command.
+Generate a certificate for a managed FQDN with an existing CSR. Internally, it calls the "csr_sign_from_file" command. Note, the CSR is delete upon completion.
 """
 }
 csr_sign(){
