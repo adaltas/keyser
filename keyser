@@ -406,7 +406,7 @@ csr_view(){
 }
 
 version(){
-  echo 'Keyser version "0.0.0".'
+  echo 'Keyser version "0.0.1".'
 }
 
 utils_reverse(){
