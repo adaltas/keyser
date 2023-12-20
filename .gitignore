@@ -1,3 +1,4 @@
 .*
+/vault
 /tmp
 !.gitignore
