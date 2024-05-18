@@ -481,6 +481,7 @@ csr_create(){
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
+  if [ -d $fqdn_dir ]; then echo 'FQDN repository already exists.'; help_csr_create; return 1; fi
   mkdir -m 700 -p $fqdn_dir
   if [[ -n "$KEYSER_GPG_MODE" ]]; then
     utils_decrypt $fqdn_dir/key.pem.gpg $fqdn_dir/key.pem > /dev/null
