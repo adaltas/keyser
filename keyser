@@ -103,22 +103,30 @@ Usage
   keyser cacert [-cefhlo] <fqdn>
 
 Options
-  -c=<country>      Country of the issuer, default is "FR".
-  -e=<email>        Email of the issuer, default is "no-reply@adaltas.com".
+  -c=<country>      Country of the issuer.
+  -e=<email>        Email of the issuer.
   -f                Overwrite existing certificate files if present.
   -h                Print the command help.
-  -l=<location>     Location of the issuer, default is "Paris".
-  -o=<organization> Organization of the issuer, default is "Adaltas".
+  -l=<location>     Location of the issuer.
+  -o=<organization> Organization of the issuer.
+
+Example
+  keyser cacert \
+    -c FR \
+    -e no-reply@adaltas.com \
+    -l Paris \
+    -o Adaltas \
+    adaltas.com
 """
 }
 cacert(){
   init
   # Parse flags
   local force help
-  local country='FR'
-  local email="no-reply@adaltas.com"
-  local location="Paris"
-  local organization="Adaltas"
+  local country=
+  local email=
+  local location=
+  local organization=
   while getopts ":c:e:fhl:o:" option; do
     case $option in
       c)
@@ -143,15 +151,19 @@ cacert(){
   done
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_cacert; return 0; fi
-  # Validation
   local fqdn=$1
+  # Validation
+  if [[ -z "$country" ]]; then echo 'Country is missing from arguments.'; help_cacert; return 1; fi
+  if [[ -z "$email" ]]; then echo 'Email is missing from arguments.'; help_cacert; return 1; fi
+  if [[ -z "$location" ]]; then echo 'Location is missing from arguments.'; help_cacert; return 1; fi
+  if [[ -z "$organization" ]]; then echo 'Organization is missing from arguments.'; help_cacert; return 1; fi
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cacert; return 1; fi
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   if [[ -f "$fqdn_dir/key.pem" ]]; then
     if [[ -n "$force" ]]; then
       rm -r "$fqdn_dir"
     else
-      echo 'CA certificate files already exists.'; help; return 1;
+      echo 'CA certificate files already exists.'; help_cacert; return 1;
     fi
   fi
   # Prepare configuration template

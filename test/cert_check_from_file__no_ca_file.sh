@@ -10,7 +10,7 @@ function test_cert_check_from_file__no_ca_file {
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
-  cacert domain.com > /dev/null
+  cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Create a certificate
   cert test.domain.com > /dev/null
   # Validate certificate

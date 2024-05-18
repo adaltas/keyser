@@ -10,7 +10,7 @@ function test_cacert__gpg {
   KEYSER_GPG_PASSPHRASE=secret
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
-  res=`cacert domain.com`
+  res=`cacert -c FR -e no-reply@domain -l P -o O domain.com`
   [[ $? != 0 ]] && exit 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain/cert.pem" ]] || exit 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain/key.pem" ]] && exit 1
