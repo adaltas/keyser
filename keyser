@@ -23,6 +23,8 @@ init(){
     echo 'Git .ignore file created:' $KEYSER_VAULT_DIR/.gitignore
   fi
 }
+KEYSER_VERSION="0.0.1"
+KEYSER_LAYOUT_VERION="1"
 
 help(){
   echo """
@@ -417,7 +419,7 @@ csr_view(){
 }
 
 version(){
-  echo 'Keyser version "0.0.1".'
+  echo "Keyser version \"${KEYSER_VERSION}\"."
 }
 
 utils_reverse(){
@@ -440,6 +442,7 @@ utils_domain(){
   local fqdn=$1
   echo -n ${fqdn%%.*}
 }
+
 utils_encrypt(){
   local source=$1
   local target=$2
