@@ -5,7 +5,7 @@ cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
 function test_cert__with_ca_fqdn {
-  KEYSER_VAULT_DIR='../tmp/test_cert'
+  KEYSER_VAULT_DIR='../tmp/test_cert__with_ca_fqdn'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR

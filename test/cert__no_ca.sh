@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_cert {
-  KEYSER_VAULT_DIR='../tmp/test_cert'
+function test_cert__no_ca {
+  KEYSER_VAULT_DIR='../tmp/test_cert__no_ca'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
@@ -24,5 +24,5 @@ function test_cert {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_cert) && echo 'OK' || echo 'KO'
+  (test_cert__no_ca) && echo 'OK' || echo 'KO'
 fi
