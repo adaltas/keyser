@@ -10,11 +10,11 @@ function test_cert_check_from_file__invalid {
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
-  cacert domain.com > /dev/null
+  cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Create a certificate
   cert test.domain.com > /dev/null
   # create an invalid certificate
-  cacert invalid.com > /dev/null
+  cacert -c FR -e no-reply@domain -l P -o O invalid.com > /dev/null
   cp -rp "$KEYSER_VAULT_DIR/com.invalid/cert.pem" "$KEYSER_VAULT_DIR/com.domain/cert.pem"
   # Validate certificate
   res=`cert_check_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.pem"`

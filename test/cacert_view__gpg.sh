@@ -10,12 +10,12 @@ function test_cacert_view__gpg {
   KEYSER_GPG_PASSPHRASE=secret
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
-  cacert domain.com > /dev/null
+  cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Validate certificate
   res=`cacert_view domain.com`
   [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate:' > /dev/null
-  echo "$res" | grep 'Subject: C=FR, O=Adaltas, L=Paris, CN=domain.com, emailAddress=no-reply@adaltas.com' > /dev/null
+  echo "$res" | grep 'Subject: C=FR, O=O, L=P, CN=domain.com, emailAddress=no-reply@domain' > /dev/null
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

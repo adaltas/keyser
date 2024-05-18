@@ -10,7 +10,7 @@ function test_cacert_view {
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
-  cacert domain.com > /dev/null
+  cacert -c FR -e no-reply@adaltas.com -l Paris -o Adaltas domain.com > /dev/null
   # Validate certificate
   res=`cacert_view domain.com`
   [[ $? != 0 ]] && exit 1

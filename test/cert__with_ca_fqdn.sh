@@ -10,7 +10,7 @@ function test_cert__with_ca_fqdn {
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
-  cacert domain-1.com > /dev/null
+  cacert -c FR -e no-reply@domain -l P -o O domain-1.com > /dev/null
   # Create a certificate
   res=`cert test.domain-2.com domain-1.com`
   # Validate execution
