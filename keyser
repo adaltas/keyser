@@ -483,9 +483,6 @@ csr_create(){
   # Sign the CSR (create "hadoop.cert.pem")
   if [ -d $fqdn_dir ]; then echo 'FQDN repository already exists.'; help_csr_create; return 1; fi
   mkdir -m 700 -p $fqdn_dir
-  if [[ -n "$KEYSER_GPG_MODE" ]]; then
-    utils_decrypt $fqdn_dir/key.pem.gpg $fqdn_dir/key.pem > /dev/null
-  fi
   openssl req -newkey rsa:2048 -sha256 -nodes \
     -out $fqdn_dir/cert.csr \
     -keyout $fqdn_dir/key.pem \
