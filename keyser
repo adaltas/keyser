@@ -658,10 +658,10 @@ csr_sign_from_file(){
   # Note, naming is inspired by ipa
   if [[ -f $ca_fqdn_dir/cert.pem ]]; then
     echo '' > $fqdn_dir/ca.crt
+    cat $ca_fqdn_dir/cert.pem >> $fqdn_dir/ca.crt
     if [[ -f $ca_fqdn_dir/ca.crt ]]; then
       cat $ca_fqdn_dir/ca.crt >> $fqdn_dir/ca.crt
     fi
-    cat $ca_fqdn_dir/cert.pem >> $fqdn_dir/ca.crt
   fi
   # Sign the CSR
   if [[ -n "$KEYSER_GPG_MODE" ]]; then
