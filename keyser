@@ -159,7 +159,11 @@ cacert(){
   if [[ -z "$organization" ]]; then echo 'Organization is missing from arguments.'; help_cacert; return 1; fi
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cacert; return 1; fi
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  if [[ -f "$fqdn_dir/key.pem" ]]; then
+  local key_file="$fqdn_dir/key.pem"
+  if [[ -n "$KEYSER_GPG_MODE" ]]; then
+    key_file+='.gpg'
+  fi
+  if [[ -f "$key_file" ]]; then
     if [[ -n "$force" ]]; then
       rm -r "$fqdn_dir"
     else
