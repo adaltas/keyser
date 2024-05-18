@@ -3,26 +3,6 @@
 set -e
 pwd=`dirname "${BASH_SOURCE}"`
 
-init(){
-  KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-./vault}"
-  KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
-  KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
-  # Validation
-  if [ -n "$KEYSER_GPG_MODE" ] && [ $KEYSER_GPG_MODE != "symmetric" ]; then
-    >&2 echo 'Invalid GPG mode, use "symmetric" or leave it empty to disable encryption.'
-    help
-    return 1
-  fi
-  # Storage preparation
-  if [ ! -d $KEYSER_VAULT_DIR ]; then
-    echo 'Vault created:' $KEYSER_VAULT_DIR
-    mkdir -m 700 -p $KEYSER_VAULT_DIR
-  fi
-  if [[ -n $KEYSER_GPG_MODE ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
-    echo '*.pem' > $KEYSER_VAULT_DIR/.gitignore
-    echo 'Git .ignore file created:' $KEYSER_VAULT_DIR/.gitignore
-  fi
-}
 KEYSER_VERSION="0.0.1"
 KEYSER_LAYOUT_VERION="1"
 
@@ -42,6 +22,7 @@ Available Commands:
   csr_sign <fqdn> [<ca_fqdn>]
   csr_sign_from_file <csr_file> [<ca_fqdn>]
   csr_view <fqdn>
+  init
   version
 
 Environment variables:
@@ -66,6 +47,51 @@ Example with symetric encryption:
   keyser cacert domain-1.com
 
 """
+}
+
+help_init(){
+  echo """
+Description
+  Initialize a new vault repository.
+
+Usage
+  keyser init
+
+Options
+  The command has no option.
+"""
+}
+init(){
+  # local help
+  while getopts ":h" option; do
+    case $option in
+      h)
+        help=1;;
+      \?)
+        echo "$OPTARG : option invalide"
+        return 1;;
+    esac
+  done
+  # shift $((OPTIND-1))
+  if [ -n "$help" ]; then help_init; return 0; fi
+  KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-./vault}"
+  KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
+  KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
+  # Validation
+  if [ -n "$KEYSER_GPG_MODE" ] && [ $KEYSER_GPG_MODE != "symmetric" ]; then
+    >&2 echo 'Invalid GPG mode, use "symmetric" or leave it empty to disable encryption.'
+    help
+    return 1
+  fi
+  # Storage preparation
+  if [ ! -d $KEYSER_VAULT_DIR ]; then
+    echo 'Vault created:' $KEYSER_VAULT_DIR
+    mkdir -m 700 -p $KEYSER_VAULT_DIR
+  fi
+  if [[ -n $KEYSER_GPG_MODE ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
+    echo '*.pem' > $KEYSER_VAULT_DIR/.gitignore
+    echo 'Git .ignore file created:' $KEYSER_VAULT_DIR/.gitignore
+  fi
 }
 
 help_cacert(){
@@ -546,6 +572,8 @@ if [ "${BASH_SOURCE[0]}" = "$0" ]; then
     csr_sign) csr_sign $2
       ;;
     csr_view) csr_view $2
+      ;;
+    init) init "${@:2}"
       ;;
     version) version $2
       ;;
