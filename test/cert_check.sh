@@ -15,11 +15,11 @@ function test_cert_check {
   cert test.domain.com > /dev/null
   # Validate certificate
   res=`cert_check test.domain.com`
-  [ $? != 0 ] && exit 1
+  [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate is valid.' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cert_check) && echo 'OK' || echo 'KO'
 fi

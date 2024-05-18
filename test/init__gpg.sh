@@ -20,7 +20,7 @@ function test_init__gpg {
   echo "$out" | grep 'Git .ignore file created: ' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_init__gpg) && echo 'OK' || echo 'KO'
 fi

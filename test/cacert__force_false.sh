@@ -13,11 +13,11 @@ function test_cacert__force_false {
   cacert domain.com > /dev/null
   # Attempt to overwrite the certificate
   res=`cacert domain.com`
-  [ $? != 1 ] && exit 1
+  [[ $? != 1 ]] && exit 1
   echo "$res" | grep 'CA certificate files already exists.' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cacert__force_false) && echo 'OK' || echo 'KO'
 fi

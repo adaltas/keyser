@@ -18,11 +18,11 @@ function test_cert_check_from_file__with_ca_file {
   # Validate certificate
   # Provide the certificate as an argument
   res=`cert_check_from_file $KEYSER_VAULT_DIR/com.domain.test/cert.pem $KEYSER_VAULT_DIR/parent.cert.pem`
-  [ $? != 0 ] && exit 1
+  [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate is valid.' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cert_check_from_file__with_ca_file) && echo 'OK' || echo 'KO'
 fi

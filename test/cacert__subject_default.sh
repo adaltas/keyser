@@ -15,7 +15,7 @@ function test_cacert__subject_default {
   echo "$res" | grep 'subject=C=FR, O=Adaltas, L=Paris, CN=domain.com, emailAddress=no-reply@adaltas.com' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cacert__subject_default) && echo 'OK' || echo 'KO'
 fi
