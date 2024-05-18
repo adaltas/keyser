@@ -316,7 +316,10 @@ Description
 Usage
   keyser cert_check <fqdn> [<cacert_file>]
 
-Internally, the command localize the certificate inside its store. Then, it call the cert_check_from_file command.
+Notes
+
+  Internally, the command localize the certificate inside its store. Then, it
+  call the cert_check_from_file command.
 """
 }
 cert_check(){
@@ -344,29 +347,40 @@ cert_check(){
   local cert_file=$fqdn_dir/cert.pem
   local cacert_file=$fqdn_dir/ca.crt
   local key_file=$fqdn_dir/key.pem
-  cert_check_from_file $cert_file $cacert_file $key_file
+  cert_check_from_file -a $cacert_file -k $key_file $cert_file
 }
 
 help_cert_check_from_file(){
   echo """
 Description
-  Check a hostname certificate against the certificate authority. The
-  certificate authority is provided as an argument or discovered inside the
-  vault.
+  Check a hostname certificate against the certificate authority and its
+  private key.
 
 Usage
-  keyser cert_check_from_file <cert_file> [<cacert_file>] [<key_file>]
+  keyser cert_check_from_file [-ck] <cert_file>
 
-Internally, the command localize the certificate inside its store. Then, it call
-the cert_check_from_file command.
+Options
+  -a=<cacert_file>  Path to the certificate authority.
+  -k=<key_file>     Path to the key file.
+  -h                Print the command help.
+
+Note
+
+  Internally, certificate authority validation uses `openssl verify`. To
+  validate the certificate with its key, we extract and compare the modulus
+  values.
 """
 }
 cert_check_from_file(){
   init
   # Parse flags
   local help
-  while getopts ":h" option; do
+  while getopts ":a:k:h" option; do
     case $option in
+      a)
+        cacert_file="$OPTARG";;
+      k)
+        key_file="$OPTARG";;
       h)
         help=1;;
       \?)
@@ -380,8 +394,6 @@ cert_check_from_file(){
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_cert_check_from_file; return 0; fi
   local cert_file=$1
-  local cacert_file=$2
-  local key_file=$3
   # Validation
   if [[ -z "$cert_file" ]]; then echo 'Certificate file path is missing from arguments.'; help_cert_check_from_file; return 1; fi
   if [[ ! -f $cert_file ]]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
