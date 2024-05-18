@@ -12,7 +12,7 @@ function test_csr_sign_from_file {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
   # Create a certificate
-  csr_create test.domain.com >/dev/null
+  csr_create -c FR -e no-reply@domain -l P -o O test.domain.com >/dev/null
   # Sign the certificate
   res=`csr_sign_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.csr"`
   [[ $? != 0 ]] && exit 1

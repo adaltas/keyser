@@ -12,7 +12,7 @@ function test_csr_view {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
   # Create a certificate
-  csr_create test.domain.com >/dev/null
+  csr_create -c FR -e no-reply@domain -l P -o O test.domain.com >/dev/null
   # View the certificate
   res=`csr_view test.domain.com`
   [[ $? != 0 ]] && exit 1
