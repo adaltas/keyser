@@ -13,12 +13,12 @@ function test_cacert_view {
   cacert domain.com > /dev/null
   # Validate certificate
   res=`cacert_view domain.com`
-  [ $? != 0 ] && exit 1
+  [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate:' > /dev/null
   echo "$res" | grep 'Subject: C=FR, O=Adaltas, L=Paris, CN=domain.com, emailAddress=no-reply@adaltas.com' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cacert_view) && echo 'OK' || echo 'KO'
 fi

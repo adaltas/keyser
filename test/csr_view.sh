@@ -15,11 +15,11 @@ function test_csr_view {
   csr_create test.domain.com >/dev/null
   # View the certificate
   res=`csr_view test.domain.com`
-  [ $? != 0 ] && exit 1
+  [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate Request:' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_csr_view) && echo 'OK' || echo 'KO'
 fi

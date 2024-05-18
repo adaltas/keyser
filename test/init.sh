@@ -19,7 +19,7 @@ function test_init {
   echo "$out" | grep 'Vault created: ' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_init) && echo 'OK' || echo 'KO'
 fi

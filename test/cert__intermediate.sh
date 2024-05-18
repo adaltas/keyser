@@ -18,11 +18,11 @@ test_cert__intermediate() {
   cert domain-4.com domain-3.com >/dev/null
   # Certificate validation
   res=`cert_check domain-4.com`
-  [ $? != 0 ] && exit 1
+  [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate is valid.' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cert__intermediate) && echo 'OK' || echo 'KO'
 fi

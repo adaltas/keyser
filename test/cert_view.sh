@@ -15,11 +15,11 @@ function test_cert_view {
   cert test.domain.com > /dev/null
   # View a certificate
   res=`cert_view test.domain.com`
-  [ $? != 0 ] && exit 1
+  [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate:' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cert_view) && echo 'OK' || echo 'KO'
 fi

@@ -11,14 +11,14 @@ function test_cacert {
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
   res=`cacert domain.com`
-  [ $? != 0 ] && exit 1
-  [ -f "$KEYSER_VAULT_DIR/com.domain/cert.pem" ] || exit 1
-  [ -f "$KEYSER_VAULT_DIR/com.domain/key.pem" ] || exit 1
+  [[ $? != 0 ]] && exit 1
+  [[ -f "$KEYSER_VAULT_DIR/com.domain/cert.pem" ]] || exit 1
+  [[ -f "$KEYSER_VAULT_DIR/com.domain/key.pem" ]] || exit 1
   echo "$res" | grep 'Certificate key created:' > /dev/null
   echo "$res" | grep 'Certificate authority created:' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cacert) && echo 'OK' || echo 'KO'
 fi

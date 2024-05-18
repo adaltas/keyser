@@ -14,12 +14,12 @@ function test_cacert__force_true {
   # Attempt to overwrite the certificate
   # cacert -f domain.com
   res=`cacert -f domain.com`
-  [ $? != 0 ] && exit 1
+  [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate key created:' > /dev/null
   echo "$res" | grep 'Certificate authority created:' > /dev/null
 }
 
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
   (test_cacert__force_true) && echo 'OK' || echo 'KO'
 fi
