@@ -302,9 +302,22 @@ cert(){
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_cert; return 0; fi
   local fqdn=$1
+  local ca_fqdn=$2
+  if [[ -z "$ca_fqdn" ]]; then 
+    ca_fqdn=${fqdn#*.}
+  fi
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert; return 1; fi
-  csr_create $fqdn
+  # Argument discovery
+  # local fqdn=`openssl x509 -noout -subject -in $cert_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
+  local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
+  local subject=`openssl x509 -noout -subject -in $ca_fqdn_dir/cert.pem`;
+  country=`echo $subject | sed -n 's/.*C=\([^,]*\),.*/\1/p'`;
+  email=`echo $subject | sed -n 's/.*emailAddress=\([^,]*\),*$/\1/p'`;
+  location=`echo $subject | sed -n 's/.*L=\([^,]*\),.*/\1/p'`;
+  organization=`echo $subject | sed -n 's/.*O=\([^,]*\),.*/\1/p'`;
+  # Certificate generation
+  csr_create -c $country -e $email -l "$location" -o "$organization" $fqdn
   csr_sign $fqdn "${@:2}"
 }
 
@@ -399,11 +412,14 @@ cert_check_from_file(){
   if [[ ! -f $cert_file ]]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
   if [[ -z "$cacert_file" ]]; then
     # Discover the certificate in the local vault
-    local fqdn=`openssl x509 -noout -subject -in $cert_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
+    local fqdn=`openssl x509 -noout -subject -in $cert_file | sed -n 's/.*CN=\([^,]*\),.*/\1/p'`;
     local ca_fqdn=${fqdn#*.}
     local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
     cacert_file=$ca_fqdn_dir/cert.pem
   fi
+  echo openssl verify \
+    -CAfile $cacert_file \
+    $cert_file
   openssl verify \
     -CAfile $cacert_file \
     $cert_file \
@@ -464,16 +480,14 @@ cert_export(){
   local cert_file=$fqdn_dir/cert.pem
   local cacert_file=$fqdn_dir/ca.crt
   if [[ -n "$KEYSER_GPG_MODE" ]]; then
-    # key_file+='.gpg'
-    echo key_file $key_file
     utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
   fi
   cp -rp $key_file $target/$(utils_reverse $fqdn).key.pem
-  cp -rp $cacert_file $target/$(utils_reverse $fqdn).cert.pem
-  cat $cert_file >> $target/$(utils_reverse $fqdn).cert.pem
-  # if [[ -n "$KEYSER_GPG_MODE" ]]; then
-  #   rm $fqdn_dir/key.pem
-  # fi
+  cp -rp $cert_file $target/$(utils_reverse $fqdn).cert.pem
+  cat $cacert_file >> $target/$(utils_reverse $fqdn).cert.pem
+  if [[ -n "$KEYSER_GPG_MODE" ]]; then
+    rm $fqdn_dir/key.pem
+  fi
 }
 
 help_cert_view(){
@@ -524,7 +538,14 @@ Description
   Create a certificate signing request.
 
 Usage
-  keyser csr_create <fqdn>
+  keyser csr_create [-cehlo] <fqdn>
+
+Options
+  -c=<country>      Country of the issuer.
+  -e=<email>        Email of the issuer.
+  -h                Print the command help.
+  -l=<location>     Location of the issuer.
+  -o=<organization> Organization of the issuer.
 
 Generate a key and its certificate signing request.
 """
@@ -533,10 +554,22 @@ csr_create(){
   init
   # Parse flags
   local help
-  while getopts ":h" option; do
+  local country=
+  local email=
+  local location=
+  local organization=
+  while getopts ":c:e:hl:o:" option; do
     case $option in
+      c)
+        country="$OPTARG";;
+      e)
+        email="$OPTARG";;
       h)
         help=1;;
+      l)
+        location="$OPTARG";;
+      o)
+        organization="$OPTARG";;
       \?)
         echo "Invalid option -$OPTARG"
         return 1;;
@@ -549,6 +582,10 @@ csr_create(){
   if [[ -n "$help" ]]; then help_csr_create; return 0; fi
   local fqdn=$1
   # Validation
+  if [[ -z "$country" ]]; then echo 'Country is missing from arguments.'; help_csr_create; return 1; fi
+  if [[ -z "$email" ]]; then echo 'Email is missing from arguments.'; help_csr_create; return 1; fi
+  if [[ -z "$location" ]]; then echo 'Location is missing from arguments.'; help_csr_create; return 1; fi
+  if [[ -z "$organization" ]]; then echo 'Organization is missing from arguments.'; help_csr_create; return 1; fi
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_csr_create; return 1; fi
   # domain=`openssl x509 -noout -subject -in $KEYSER_VAULT_DIR/ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
@@ -559,7 +596,7 @@ csr_create(){
   openssl req -newkey rsa:2048 -sha256 -nodes \
     -out $fqdn_dir/cert.csr \
     -keyout $fqdn_dir/key.pem \
-    -subj "/C=FR/O=ADALTAS.CLOUD/L=Paris/CN=${fqdn}" \
+    -subj "/C=$country/O=$organization/L=$location/CN=${fqdn}/emailAddress=$email" \
     2>/dev/null
   [[ $? != 0 ]] && return 1
   if [[ -z "$KEYSER_GPG_MODE" ]]; then
@@ -642,9 +679,11 @@ csr_sign_from_file(){
   if [[ -n "$help" ]]; then help_csr_sign_from_file; return 0; fi
   local csr_file=$1
   local ca_fqdn=$2
+  echo csr_sign_from_file $csr_file $ca_fqdn
   # Validation
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
-  local fqdn=`openssl req -noout -subject -in  $csr_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
+  openssl req -noout -subject -in  $csr_file
+  local fqdn=`openssl req -noout -subject -in  $csr_file | sed -n 's/.*CN=\([^,]*\),.*/\1/p'`;
   if [[ -z "$ca_fqdn" ]]; then 
     ca_fqdn=${fqdn#*.}
   fi

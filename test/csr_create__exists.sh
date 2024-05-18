@@ -12,8 +12,8 @@ function test_csr_create__exists {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
   # Create a certificate
-  csr_create test.domain.com > /dev/null
-  res=`csr_create test.domain.com`
+  csr_create -c FR -e no-reply@domain -l P -o O test.domain.com > /dev/null
+  res=`csr_create -c FR -e no-reply@domain -l P -o O test.domain.com`
   [[ $? == 0 ]] && exit 1
   echo "$res" | grep 'FQDN repository already exists.' > /dev/null
 }

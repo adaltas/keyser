@@ -12,7 +12,7 @@ function test_csr_create__gpg {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
   # Create a certificate
-  res=`csr_create test.domain.com`
+  res=`csr_create -c FR -e no-reply@domain -l P -o O test.domain.com`
   [[ $? != 0 ]] && (echo $res && exit 1)
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/key.pem" ]] && exit 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/key.pem.gpg" ]] || exit 1
