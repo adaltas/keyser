@@ -22,7 +22,7 @@ function test_cert__with_ca_fqdn {
   cacertin=`openssl x509 -noout -fingerprint -in $KEYSER_VAULT_DIR/com.domain-1/cert.pem`
   cacertout=`openssl x509 -noout -fingerprint -in $KEYSER_VAULT_DIR/com.domain-2.test/ca.crt`
   [[ $cacertin == $cacertout ]] || exit 1
-  cert_check_from_file $KEYSER_VAULT_DIR/com.domain-2.test/cert.pem $KEYSER_VAULT_DIR/com.domain-2.test/ca.crt > /dev/null
+  cert_check_from_file -a $KEYSER_VAULT_DIR/com.domain-2.test/ca.crt $KEYSER_VAULT_DIR/com.domain-2.test/cert.pem > /dev/null
   [[ $? != 0 ]] && exit 1
   # Validate output
   echo "$res" | grep 'Key created in:' > /dev/null
