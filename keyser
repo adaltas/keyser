@@ -15,8 +15,12 @@ init(){
   fi
   # Storage preparation
   if [ ! -d $KEYSER_VAULT_DIR ]; then
+    echo 'Vault created:' $KEYSER_VAULT_DIR
     mkdir -m 700 -p $KEYSER_VAULT_DIR
-    # echo '*.pem' > .gitignore
+  fi
+  if [[ -n $KEYSER_GPG_MODE ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
+    echo '*.pem' > $KEYSER_VAULT_DIR/.gitignore
+    echo 'Git .ignore file created:' $KEYSER_VAULT_DIR/.gitignore
   fi
 }
 
