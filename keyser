@@ -686,6 +686,7 @@ utils_encrypt(){
   if [[ -z "$KEYSER_GPG_MODE" ]]; then
     echo $source
   elif [[ $KEYSER_GPG_MODE == "symmetric" ]]; then
+    if [[ ! -f $source ]]; then echo 'No such file to encrypt.'; exit 1; fi
     gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --symmetric $source
     [[ $? != 0 ]] && echo 'GPG command failed' && return 1
     echo $target
@@ -700,6 +701,7 @@ utils_decrypt(){
   if [[ -z "$KEYSER_GPG_MODE" ]]; then
     echo $source
   elif [[ $KEYSER_GPG_MODE == "symmetric" ]]; then
+    if [[ ! -f $source ]]; then echo 'No such file to decrypt.'; exit 1; fi
     gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --decrypt $source 2>/dev/null
     echo $target
   else
