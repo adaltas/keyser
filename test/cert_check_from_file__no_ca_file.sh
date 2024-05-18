@@ -14,6 +14,7 @@ function test_cert_check_from_file__no_ca_file {
   # Create a certificate
   cert test.domain.com > /dev/null
   # Validate certificate
+  # Discover the certificate in the local vault
   res=`cert_check_from_file $KEYSER_VAULT_DIR/com.domain.test/cert.pem`
   [ $? != 0 ] && exit 1
   echo "$res" | grep 'Certificate is valid.' > /dev/null

@@ -204,7 +204,9 @@ cert_check(){
 help_cert_check_from_file(){
   echo """
 Description
-  Check a hostname certificate against the certificate authority.
+  Check a hostname certificate against the certificate authority. The
+  certificate authority is provided as an argument or discovered inside the
+  vault.
 
 Usage
   keyser cert_check_from_file <cert_file> [<cacert_file>]
@@ -219,7 +221,8 @@ cert_check_from_file(){
   if [ -z "$cert_file" ]; then echo 'Certificate file path is missing from arguments.'; help_cert_check_from_file; return 1; fi
   if [ ! -f $cert_file ]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
   local cacert_file=$2
-  if [ -z "$cacert_file" ]; then 
+  if [ -z "$cacert_file" ]; then
+    # Discover the certificate in the local vault
     local fqdn=`openssl x509 -noout -subject -in  $cert_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
     local ca_fqdn=${fqdn#*.}
     local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
