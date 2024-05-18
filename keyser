@@ -30,7 +30,7 @@ Usage:
   keyser <command>
 
 Available Commands:
-  cacert <fqdn>
+  cacert [-cefhlo] <fqdn>
   cacert_view <fqdn>
   cert <fqdn> [<ca_fqdn>]
   cert_check <fqdn> [<cacert_file>]
@@ -72,7 +72,7 @@ Description
   Create a certificate authority.
 
 Usage
-  keyser cacert [-cfole] <fqdn>
+  keyser cacert [-cefhlo] <fqdn>
 
 Options
   -c=<country>      Country of the issuer, default is "FR".
@@ -86,11 +86,12 @@ Options
 cacert(){
   init
   # Parse flags
+  local force help
   local country='FR'
-  local organization="Adaltas"
-  local location="Paris"
   local email="no-reply@adaltas.com"
-  while getopts ":c:e:fho:l:" option; do
+  local location="Paris"
+  local organization="Adaltas"
+  while getopts ":c:e:fhl:o:" option; do
     case $option in
       c)
         country="$OPTARG";;
@@ -105,7 +106,10 @@ cacert(){
       o)
         organization="$OPTARG";;
       \?)
-        echo "$OPTARG : option invalide"
+        echo "Invalid option -$OPTARG"
+        return 1;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
         return 1;;
     esac
   done
@@ -522,7 +526,7 @@ utils_write_sign_cnf(){
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   case "$1" in
-    cacert) cacert $2
+    cacert) cacert "${@:2}"
       ;;
     cacert_view) cacert_view $2
       ;;
