@@ -19,7 +19,7 @@ function test_cert_check_from_file__invalid {
   # Validate certificate
   res=`cert_check_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.pem"`
   [[ $? != 1 ]] && exit 1
-  echo "$res" | grep 'Certificate is not valid.' > /dev/null
+  echo "$res" | grep 'Verification failed:' > /dev/null
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
