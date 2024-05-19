@@ -62,7 +62,7 @@ Options
 """
 }
 init(){
-  # local help
+  local help
   while getopts ":h" option; do
     case $option in
       h)
@@ -280,15 +280,21 @@ Description
 Usage
   keyser cert <fqdn> [<ca_fqdn>]
 
+Options
+  -i                Create a CSR for an intermediate certificate.
+  -h                Print the command help.
+
 Generate the certificate and private key for a give hostname. The command combine the csr_create and csr_sign commands for conveniency.
 """
 }
 cert(){
   init
   # Parse flags
-  local help
-  while getopts ":h" option; do
+  local intermediate help
+  while getopts ":ih" option; do
     case $option in
+      i)
+        intermediate='-i';;
       h)
         help=1;;
       \?)
@@ -318,7 +324,7 @@ cert(){
   organization=`echo $subject | sed -n 's/.*O=\([^,]*\),.*/\1/p'`;
   # Certificate generation
   csr_create -c $country -e $email -l "$location" -o "$organization" $fqdn
-  csr_sign $fqdn "${@:2}"
+  csr_sign $intermediate $fqdn "${@:2}"
 }
 
 help_cert_check(){
@@ -554,10 +560,7 @@ csr_create(){
   init
   # Parse flags
   local help
-  local country=
-  local email=
-  local location=
-  local organization=
+  local country email location organization
   while getopts ":c:e:hl:o:" option; do
     case $option in
       c)
@@ -617,15 +620,21 @@ Description
 Usage
   keyser csr_sign <fqdn> [<ca_fqdn>]
 
+Options
+  -i                Create a CSR for an intermediate certificate.
+  -h                Print the command help.
+
 Generate a certificate for a managed FQDN with an existing CSR. Internally, it calls the "csr_sign_from_file" command. Note, the CSR is delete upon completion.
 """
 }
 csr_sign(){
   init
   # Parse flags
-  local help
-  while getopts ":h" option; do
+  local intermediate help
+  while getopts ":ih" option; do
     case $option in
+      i)
+        intermediate='-i';;
       h)
         help=1;;
       \?)
@@ -644,7 +653,7 @@ csr_sign(){
   local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)"
   local csr_file="$fqdn_dir/cert.csr"
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign; return 1; fi
-  csr_sign_from_file $csr_file $2
+  csr_sign_from_file $intermediate $csr_file $2
   rm $csr_file
 }
 
@@ -656,6 +665,10 @@ Description
 Usage
   keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
 
+Options
+  -i                Create an intermediate certificate.
+  -h                Print the command help.
+
 Generate a certificate signing request (CSR) for a given file. The Certificate Authority FQDN is optionnal. When not provided, it is extracted from the CSR subject.
 """
 }
@@ -663,8 +676,11 @@ csr_sign_from_file(){
   init
   # Parse flags
   local help
-  while getopts ":h" option; do
+  local intermediate
+  while getopts ":ih" option; do
     case $option in
+      i)
+        intermediate='-i';;
       h)
         help=1;;
       \?)
@@ -679,10 +695,8 @@ csr_sign_from_file(){
   if [[ -n "$help" ]]; then help_csr_sign_from_file; return 0; fi
   local csr_file=$1
   local ca_fqdn=$2
-  echo csr_sign_from_file $csr_file $ca_fqdn
   # Validation
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
-  openssl req -noout -subject -in  $csr_file
   local fqdn=`openssl req -noout -subject -in  $csr_file | sed -n 's/.*CN=\([^,]*\),.*/\1/p'`;
   if [[ -z "$ca_fqdn" ]]; then 
     ca_fqdn=${fqdn#*.}
@@ -707,7 +721,7 @@ csr_sign_from_file(){
     [[ -f "$ca_fqdn_dir/key.pem" ]] && rm $ca_fqdn_dir/key.pem
     utils_decrypt $ca_fqdn_dir/key.pem.gpg $ca_fqdn_dir/key.pem > /dev/null
   fi
-  utils_write_sign_cnf $fqdn_dir/sign.cnf
+  utils_write_sign_cnf $intermediate $fqdn_dir/sign.cnf
   error=$(
     openssl x509 -req -sha256 -days 7300 \
       -CA $ca_fqdn_dir/cert.pem -CAkey $ca_fqdn_dir/key.pem \
@@ -741,15 +755,12 @@ csr_view(){
   init
   # Parse flags
   local help
-  while getopts ":h" option; do
+  while getopts ":h:" option; do
     case $option in
       h)
         help=1;;
       \?)
         echo "Invalid option -$OPTARG"
-        return 1;;
-      :)
-        echo "Option -$OPTARG requires an argument." >&2
         return 1;;
     esac
   done
@@ -881,11 +892,41 @@ utils_write_ca_cnf(){
 	EOF
 }
 
+help_utils_write_sign_cnf(){
+  echo """
+Description
+  Generate a sign configuration.
+
+Usage
+  keyser utils_write_sign_cnf <target>
+
+Write a configuration file in the target destination used to sign a certificate request.
+"""
+}
 utils_write_sign_cnf(){
-  cat <<-'EOF' > $1
+  init # For same raison, getopts fail if init->getopts is not called
+  # Parse flags
+  local help
+  local intermediate
+  while getopts ":ih" option; do
+    case $option in
+      i)
+        intermediate='TRUE';;
+      h)
+        help=1;;
+      \?)
+        echo "Invalid option -$OPTARG"
+        return 1;;
+    esac
+  done
+  shift $((OPTIND-1))
+  if [[ -n "$help" ]]; then help_utils_write_sign_cnf; return 0; fi
+  # intermediate=${intermediate:='FALSE'}
+  # echo intermediate:: $intermediate
+  cat <<-EOF > $1
 	subjectKeyIdentifier=hash
 	authorityKeyIdentifier=keyid,issuer
-	basicConstraints=critical,CA:TRUE,pathlen:1
+	basicConstraints=critical,CA:${intermediate:=FALSE},pathlen:1
 	EOF
 }
 

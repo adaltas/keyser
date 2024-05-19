@@ -12,8 +12,8 @@ test_cert__intermediate() {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain-1.com >/dev/null
   # Create an intermediate certificates
-  cert domain-2.com domain-1.com >/dev/null
-  cert domain-3.com domain-2.com >/dev/null
+  cert -i domain-2.com domain-1.com >/dev/null
+  cert -i domain-3.com domain-2.com >/dev/null
   # # Create a leaf certificate
   cert domain-4.com domain-3.com >/dev/null
   # Certificate validation
