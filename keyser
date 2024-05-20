@@ -62,7 +62,7 @@ Options
 """
 }
 init(){
-  local help
+  local OPTIND help
   while getopts ":h" option; do
     case $option in
       h)
@@ -122,12 +122,12 @@ Example
 cacert(){
   init
   # Parse flags
-  local force help
   local country=
   local email=
   local location=
   local organization=
   while getopts ":c:e:fhl:o:" option; do
+  local OPTIND force help
     case $option in
       c)
         country="$OPTARG";;
@@ -207,7 +207,7 @@ Usage
 cacert_list(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   while getopts ":h" option; do
     case $option in
       h)
@@ -249,7 +249,7 @@ Usage
 cacert_view(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   while getopts ":h" option; do
     case $option in
       h)
@@ -290,7 +290,7 @@ Generate the certificate and private key for a give hostname. The command combin
 cert(){
   init
   # Parse flags
-  local intermediate help
+  local OPTIND intermediate help
   while getopts ":ih" option; do
     case $option in
       i)
@@ -344,7 +344,7 @@ Notes
 cert_check(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   while getopts ":h" option; do
     case $option in
       h)
@@ -393,7 +393,7 @@ Note
 cert_check_from_file(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   while getopts ":a:k:h" option; do
     case $option in
       a)
@@ -460,7 +460,7 @@ help_cert_export(){
 cert_export(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   while getopts ":h" option; do
     case $option in
       h)
@@ -510,7 +510,7 @@ Print the detailed information of a Certificate Signing Request (CSR) file.
 cert_view(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   while getopts ":h" option; do
     case $option in
       h)
@@ -559,7 +559,7 @@ Generate a key and its certificate signing request.
 csr_create(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   local country email location organization
   while getopts ":c:e:hl:o:" option; do
     case $option in
@@ -630,7 +630,7 @@ Generate a certificate for a managed FQDN with an existing CSR. Internally, it c
 csr_sign(){
   init
   # Parse flags
-  local intermediate help
+  local OPTIND intermediate help
   while getopts ":ih" option; do
     case $option in
       i)
@@ -675,7 +675,7 @@ Generate a certificate signing request (CSR) for a given file. The Certificate A
 csr_sign_from_file(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   local intermediate
   while getopts ":ih" option; do
     case $option in
@@ -756,7 +756,7 @@ Print the detailed information of a Certificate Signing Request (CSR) stored ins
 csr_view(){
   init
   # Parse flags
-  local help
+  local OPTIND help
   while getopts ":h:" option; do
     case $option in
       h)
@@ -911,9 +911,8 @@ Write a configuration file in the target destination used to sign a certificate 
 """
 }
 utils_write_sign_cnf(){
-  init # For same raison, getopts fail if init->getopts is not called
   # Parse flags
-  local help
+  local OPTIND help
   local intermediate
   while getopts ":ih" option; do
     case $option in
