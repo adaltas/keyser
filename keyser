@@ -861,7 +861,7 @@ utils_write_ca_cnf(){
 	default_md       = sha256       # Use public key default MD
 	preserve         = no           # Keep passed DN ordering
 	
-	x509_extensions = ca_extensions # The extensions to add to the cert
+	x509_extensions = x509_ext # The extensions to add to the cert
 	
 	email_in_dn     = no            # Don't concat the email in the DN
 	copy_extensions = copy          # Required to copy SANs from CSR to cert
@@ -870,22 +870,27 @@ utils_write_ca_cnf(){
 	[ req ]
 	default_bits       = 2048
 	default_keyfile    = cakey.pem
-	distinguished_name = ca_distinguished_name
-	x509_extensions    = ca_extensions
+	distinguished_name = subject
+	x509_extensions    = x509_ext
 	string_mask        = utf8only
 	
 	####################################################################
-	[ ca_distinguished_name ]
+	[ subject ]
 	# countryName                 = FR
+	# countryName_default         = FR
 	# stateOrProvinceName         = 
+	# stateOrProvinceName_default =
 	# localityName                = Paris
+	# localityName_default        = Paris
 	# organizationName            = ADALTAS
-	# organizationalUnitName         = 
-	# commonName         = <commonName>
-	# emailAddress         = david@adaltas.com
+	# organizationName_default    = ADALTAS
+	# organizationalUnitName      = 
+	# commonName                  = local
+	# emailAddress                = david@adaltas.com
+	# emailAddress_default.       = no-reply@adaltas.com
 	
 	####################################################################
-	[ ca_extensions ]
+	[ x509_ext ]
 	
 	subjectKeyIdentifier   = hash
 	authorityKeyIdentifier = keyid:always, issuer
