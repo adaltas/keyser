@@ -103,7 +103,9 @@ Usage
   keyser cacert [-cefhlo] <fqdn>
 
 Options
+  -a=<ip...>        Comma-separated list of IP adresses.
   -c=<country>      Country of the issuer.
+  -d=<domain...>    Comma-separated list of domains.
   -e=<email>        Email of the issuer.
   -f                Overwrite existing certificate files if present.
   -h                Print the command help.
@@ -113,7 +115,9 @@ Options
 Example
   keyser cacert \
     -c FR \
+    -d local,localhost
     -e no-reply@adaltas.com \
+    -i 127.0.0.1
     -l Paris \
     -o Adaltas \
     adaltas.com
@@ -122,15 +126,17 @@ Example
 cacert(){
   init
   # Parse flags
-  local country=
-  local email=
-  local location=
-  local organization=
-  while getopts ":c:e:fhl:o:" option; do
   local OPTIND force help
+  local country email location organization
+  local address dns
+  while getopts ":a:c:d:e:fhl:o:" option; do
     case $option in
+      a)
+        address="$OPTARG";;
       c)
         country="$OPTARG";;
+      d)
+        dns="$OPTARG";;
       e)
         email="$OPTARG";;
       f)
@@ -179,10 +185,12 @@ cacert(){
   openssl genrsa -out $fqdn_dir/key.pem 2048
   # Self-signed (with the key previously generated) root CA certificate (create "ca.crt.pem")
   # man: The req command primarily creates and processes certificate requests in PKCS#10 format.
-  # "/C=FR/ST=IDF/L=Paris/O=Adaltas/CN=adaltas.com/emailAddress=david@adaltas.com"
+  local san=$(utils_opt_san $dns $address)
   openssl req -x509 -new -sha256 \
     -config $fqdn_dir/ca.cnf \
     -subj "/C=$country/O=$organization/L=$location/CN=$fqdn/emailAddress=$email" \
+    ${san:+"-addext"} ${san:+"$san"} \
+    -addext "nsComment= OpenSSL Generated Certificate by Keyser" \
     -key $fqdn_dir/key.pem -days 7300 \
     -out $fqdn_dir/cert.pem
   echo 'Certificate authority created:' $fqdn_dir/cert.pem

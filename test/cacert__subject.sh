@@ -11,6 +11,7 @@ function test_cacert__subject {
   rm -rf $KEYSER_VAULT_DIR
   # Generate a certificate authority
   cacert -c PL -o "My Domain" -l Warsawa -e no-reply@domain.com domain.com > /dev/null
+  # Subject validation
   res=`openssl x509 -noout -subject -in $KEYSER_VAULT_DIR/com.domain/cert.pem`
   echo "$res" | grep 'subject=C=PL, O=My Domain, L=Warsawa, CN=domain.com, emailAddress=no-reply@domain.com' > /dev/null
 }
