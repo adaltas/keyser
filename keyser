@@ -785,6 +785,7 @@ csr_sign_from_file(){
   utils_write_sign_cnf ${address:+"-a $address"} ${dns:+"-d $dns"} $intermediate $fqdn_dir/sign.cnf
   # See [Requirements](https://support.apple.com/en-us/103769) for trusted certificates in iOS 13 and macOS 10.15
   # TLS server certificates must have a validity period of 825 days or fewer (as expressed in the NotBefore and NotAfter fields of the certificate).
+  # If you want to copy the extensions from the csr to the crt, add the option `-copy_extensions=copyall`
   error=$(
     openssl x509 -req -sha256 -days 825 \
       -CA $ca_fqdn_dir/cert.pem -CAkey $ca_fqdn_dir/key.pem \
@@ -928,7 +929,9 @@ utils_opt_san(){
 utils_write_ca_cnf(){
   cat <<-'EOF' >$1
 	HOME            = .
-	RANDFILE        = $ENV::HOME/rnd
+	# On modern operating systems, RANDFILE is generally no longer necessary.
+	# See https://www.openssl.org/docs/man1.1.1/man1/rand.html
+	# RANDFILE        = $ENV::HOME/rnd
 	
 	####################################################################
 	[ ca ]
