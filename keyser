@@ -356,8 +356,7 @@ Usage
 
 Notes
 
-  Internally, the command localize the certificate inside its store. Then, it
-  call the cert_check_from_file command.
+  Internally, the command localize the certificate inside its store. Then, it call the cert_check_from_file command.
 """
 }
 cert_check(){
@@ -391,8 +390,7 @@ cert_check(){
 help_cert_check_from_file(){
   echo """
 Description
-  Check a hostname certificate against the certificate authority and its
-  private key.
+  Check a hostname certificate against the certificate authority and its private key.
 
 Usage
   keyser cert_check_from_file [-ck] <cert_file>
@@ -404,9 +402,7 @@ Options
 
 Note
 
-  Internally, certificate authority validation uses `openssl verify`. To
-  validate the certificate with its key, we extract and compare the modulus
-  values.
+  Internally, certificate authority validation uses `openssl verify`. To validate the certificate with its key, we extract and compare the modulus values.
 """
 }
 cert_check_from_file(){
