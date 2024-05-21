@@ -163,7 +163,7 @@ cacert(){
   if [[ -n "$KEYSER_GPG_MODE" ]]; then
     key_file+='.gpg'
   fi
-  if [[ -f "$key_file" ]]; then
+  if [[ -d "$fqdn_dir" ]]; then
     if [[ -n "$force" ]]; then
       rm -r "$fqdn_dir"
     else
