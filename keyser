@@ -289,6 +289,8 @@ Usage
   keyser cert <fqdn> [<ca_fqdn>]
 
 Options
+  -a=<ip...>        Comma-separated list of IP adresses.
+  -d=<domain...>    Comma-separated list of domains.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
 
@@ -299,8 +301,12 @@ cert(){
   init
   # Parse flags
   local OPTIND intermediate help
-  while getopts ":ih" option; do
+  while getopts ":a:d:ih" option; do
     case $option in
+      a)
+        address="$OPTARG";;
+      d)
+        dns="$OPTARG";;
       i)
         intermediate='-i';;
       h)
@@ -323,7 +329,6 @@ cert(){
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert; return 1; fi
   # Argument discovery
-  # local fqdn=`openssl x509 -noout -subject -in $cert_file | sed -n '/^subject/s/^.*CN\s*=\s*//p'`;
   local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
   local subject=`openssl x509 -noout -subject -in $ca_fqdn_dir/cert.pem`;
   country=`echo $subject | sed -n 's/.*C=\([^,]*\),.*/\1/p'`;
@@ -331,8 +336,14 @@ cert(){
   location=`echo $subject | sed -n 's/.*L=\([^,]*\),.*/\1/p'`;
   organization=`echo $subject | sed -n 's/.*O=\([^,]*\),.*/\1/p'`;
   # Certificate generation
-  csr_create -c $country -e $email -l "$location" -o "$organization" $fqdn
-  csr_sign $intermediate $fqdn "${@:2}"
+  csr_create \
+    ${address:+'-a'} $address ${dns:+'-d'} $dns \
+    -c $country -e $email -l "$location" -o "$organization" \
+    $fqdn
+  csr_sign \
+    ${address:+'-a'} $address ${dns:+'-d'} $dns \
+    $intermediate \
+    $fqdn "${@:2}"
 }
 
 help_cert_check(){
@@ -555,7 +566,9 @@ Usage
   keyser csr_create [-cehlo] <fqdn>
 
 Options
+  -a=<ip...>        Comma-separated list of IP adresses.
   -c=<country>      Country of the issuer.
+  -d=<domain...>    Comma-separated list of domains.
   -e=<email>        Email of the issuer.
   -h                Print the command help.
   -l=<location>     Location of the issuer.
@@ -569,10 +582,15 @@ csr_create(){
   # Parse flags
   local OPTIND help
   local country email location organization
-  while getopts ":c:e:hl:o:" option; do
+  local address dns
+  while getopts ":a:c:d:e:hl:o:" option; do
     case $option in
+      a)
+        address="$OPTARG";;
       c)
         country="$OPTARG";;
+      d)
+        dns="$OPTARG";;
       e)
         email="$OPTARG";;
       h)
@@ -598,16 +616,17 @@ csr_create(){
   if [[ -z "$location" ]]; then echo 'Location is missing from arguments.'; help_csr_create; return 1; fi
   if [[ -z "$organization" ]]; then echo 'Organization is missing from arguments.'; help_csr_create; return 1; fi
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_csr_create; return 1; fi
-  # domain=`openssl x509 -noout -subject -in $KEYSER_VAULT_DIR/ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
   if [ -d $fqdn_dir ]; then echo 'FQDN repository already exists.'; help_csr_create; return 1; fi
   mkdir -m 700 -p $fqdn_dir
+  local san=$(utils_opt_san $dns $address)
   openssl req -newkey rsa:2048 -sha256 -nodes \
     -out $fqdn_dir/cert.csr \
     -keyout $fqdn_dir/key.pem \
     -subj "/C=$country/O=$organization/L=$location/CN=${fqdn}/emailAddress=$email" \
+    ${san:+"-addext"} ${san:+"$san"} \
     2>/dev/null
   [[ $? != 0 ]] && return 1
   if [[ -z "$KEYSER_GPG_MODE" ]]; then
@@ -617,6 +636,8 @@ csr_create(){
     rm $fqdn_dir/key.pem
     echo 'Key created in:' $fqdn_dir/key.pem.gpg
   fi
+  # CSR can be verify with the command
+  # openssl req -text -noout -verify -in exemple.csr
   echo 'CSR created in:' $fqdn_dir/cert.csr
 }
 
@@ -629,6 +650,8 @@ Usage
   keyser csr_sign <fqdn> [<ca_fqdn>]
 
 Options
+  -a=<ip...>        Comma-separated list of IP adresses.
+  -d=<domain...>    Comma-separated list of domains.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
 
@@ -639,8 +662,12 @@ csr_sign(){
   init
   # Parse flags
   local OPTIND intermediate help
-  while getopts ":ih" option; do
+  while getopts ":a:d:ih" option; do
     case $option in
+      a)
+        address="$OPTARG";;
+      d)
+        dns="$OPTARG";;
       i)
         intermediate='-i';;
       h)
@@ -661,7 +688,11 @@ csr_sign(){
   local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)"
   local csr_file="$fqdn_dir/cert.csr"
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign; return 1; fi
-  csr_sign_from_file $intermediate $csr_file $2
+  # Sign certificate
+  csr_sign_from_file \
+    ${address:+'-a'} $address ${dns:+'-d'} $dns \
+    $intermediate \
+    $csr_file $2
   rm $csr_file
 }
 
@@ -674,6 +705,8 @@ Usage
   keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
 
 Options
+  -a=<ip...>        Comma-separated list of IP adresses.
+  -d=<domain...>    Comma-separated list of domains.
   -i                Create an intermediate certificate.
   -h                Print the command help.
 
@@ -684,9 +717,13 @@ csr_sign_from_file(){
   init
   # Parse flags
   local OPTIND help
-  local intermediate
-  while getopts ":ih" option; do
+  local address dns intermediate
+  while getopts ":a:d:ih" option; do
     case $option in
+      a)
+        address="$OPTARG";;
+      d)
+        dns="$OPTARG";;
       i)
         intermediate='-i';;
       h)
@@ -729,7 +766,7 @@ csr_sign_from_file(){
     [[ -f "$ca_fqdn_dir/key.pem" ]] && rm $ca_fqdn_dir/key.pem
     utils_decrypt $ca_fqdn_dir/key.pem.gpg $ca_fqdn_dir/key.pem > /dev/null
   fi
-  utils_write_sign_cnf $intermediate $fqdn_dir/sign.cnf
+  utils_write_sign_cnf ${address:+'-a'} $address ${dns:+'-d'} $dns $intermediate $fqdn_dir/sign.cnf
   # See [Requirements](https://support.apple.com/en-us/103769) for trusted certificates in iOS 13 and macOS 10.15
   # TLS server certificates must have a validity period of 825 days or fewer (as expressed in the NotBefore and NotAfter fields of the certificate).
   error=$(
@@ -853,6 +890,25 @@ utils_openssl_modulus(){
   fi
 }
 
+utils_opt_san(){
+  local dns=$1
+  local address=$2
+  local san
+  if [[ -n "$dns" ]] || [[ -n "$address" ]]; then
+    san='subjectAltName= '
+    if [[ -n "$dns" ]]; then
+      san+="DNS: ${dns//,/, DNS: }"
+    fi
+    if [[ -n "$dns" ]] && [[ -n "$address" ]]; then
+      san+=', '
+    fi
+    if [[ -n "$address" ]]; then
+      san+="IP: ${address//,/, address: }"
+    fi
+  fi
+  echo $san
+}
+
 utils_write_ca_cnf(){
   cat <<-'EOF' >$1
 	HOME            = .
@@ -915,15 +971,25 @@ Description
 Usage
   keyser utils_write_sign_cnf <target>
 
+Options
+  -a=<ip...>        Comma-separated list of IP adresses.
+  -d=<domain...>    Comma-separated list of domains.
+  -i                Create an intermediate certificate.
+  -h                Print the command help.
+
 Write a configuration file in the target destination used to sign a certificate request.
 """
 }
 utils_write_sign_cnf(){
   # Parse flags
   local OPTIND help
-  local intermediate
-  while getopts ":ih" option; do
+  local address dns intermediate
+  while getopts ":a:d:ih" option; do
     case $option in
+      a)
+        address="$OPTARG";;
+      d)
+        dns="$OPTARG";;
       i)
         intermediate='TRUE';;
       h)
@@ -935,12 +1001,12 @@ utils_write_sign_cnf(){
   done
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_utils_write_sign_cnf; return 0; fi
-  # intermediate=${intermediate:='FALSE'}
-  # echo intermediate:: $intermediate
+  local san=$(utils_opt_san $dns $address)
   cat <<-EOF > $1
 	subjectKeyIdentifier=hash
 	authorityKeyIdentifier=keyid,issuer
 	basicConstraints=critical,CA:${intermediate:=FALSE},pathlen:1
+	${san}
 	EOF
 }
 
