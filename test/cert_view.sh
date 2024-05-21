@@ -17,6 +17,7 @@ function test_cert_view {
   res=`cert_view test.domain.com`
   [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate:' > /dev/null
+  echo "$res" | grep 'Subject: C=FR, O=O, L=P, CN=test.domain.com, emailAddress=no-reply@domain' > /dev/null
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
