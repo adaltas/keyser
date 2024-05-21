@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_csr_sign_from_file {
-  KEYSER_VAULT_DIR='../tmp/test_csr_sign_from_file'
+function test {
+  KEYSER_VAULT_DIR='../tmp/csr_sign_from_file'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
@@ -22,5 +22,5 @@ function test_csr_sign_from_file {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_csr_sign_from_file) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi

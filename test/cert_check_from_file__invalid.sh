@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_cert_check_from_file__invalid {
-  KEYSER_VAULT_DIR='../tmp/test_cert_check_from_file__invalid'
+function test {
+  KEYSER_VAULT_DIR='../tmp/cert_check_from_file__invalid'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
@@ -24,5 +24,5 @@ function test_cert_check_from_file__invalid {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_cert_check_from_file__invalid) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi

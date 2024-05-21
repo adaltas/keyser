@@ -4,7 +4,7 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_version {
+function test {
   # Generate a certificate authority
   res=`version | grep -e '\d\d*\.\d\d*\.\d\d*'`
   [[ $? != 0 ]] && exit 1
@@ -13,5 +13,5 @@ function test_version {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_version) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi

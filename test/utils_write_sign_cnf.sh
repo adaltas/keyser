@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_utils_write_sign_cnf {
-  KEYSER_VAULT_DIR='../tmp/test_utils_write_sign_cnf'
+function test {
+  KEYSER_VAULT_DIR='../tmp/utils_write_sign_cnf'
   mkdir -p $KEYSER_VAULT_DIR
   # Intermediate certificate
   utils_write_sign_cnf -i $KEYSER_VAULT_DIR/sign.cnf
@@ -19,5 +19,5 @@ function test_utils_write_sign_cnf {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_utils_write_sign_cnf) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi

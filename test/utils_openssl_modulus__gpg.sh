@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_utils_openssl_modulus__gpg {
-  KEYSER_VAULT_DIR='../tmp/test_utils_openssl_modulus__gpg'
+function test {
+  KEYSER_VAULT_DIR='../tmp/utils_openssl_modulus__gpg'
   KEYSER_GPG_MODE=symmetric
   KEYSER_GPG_PASSPHRASE=secret
   # Generate a certificate authority
@@ -24,5 +24,5 @@ function test_utils_openssl_modulus__gpg {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_utils_openssl_modulus__gpg) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi
