@@ -927,54 +927,33 @@ utils_opt_san(){
 }
 
 utils_write_ca_cnf(){
-  cat <<-'EOF' >$1
-	HOME            = .
 	# On modern operating systems, RANDFILE is generally no longer necessary.
 	# See https://www.openssl.org/docs/man1.1.1/man1/rand.html
-	# RANDFILE        = $ENV::HOME/rnd
+  cat <<-'EOF' >$1
+	HOME            = .
 	
-	####################################################################
 	[ ca ]
 	default_ca    = CA_default      # The default ca section
 	
 	[ CA_default ]
-	
 	default_days     = 1000         # How long to certify for
 	default_crl_days = 30           # How long before next CRL
 	default_md       = sha256       # Use public key default MD
 	preserve         = no           # Keep passed DN ordering
-	
-	x509_extensions = x509_ext # The extensions to add to the cert
-	
+	x509_extensions = x509_ext      # The extensions to add to the cert
 	email_in_dn     = no            # Don't concat the email in the DN
 	copy_extensions = copy          # Required to copy SANs from CSR to cert
 	
-	####################################################################
 	[ req ]
 	default_bits       = 2048
 	default_keyfile    = cakey.pem
 	distinguished_name = subject
 	x509_extensions    = x509_ext
 	string_mask        = utf8only
-	
-	####################################################################
+  
 	[ subject ]
-	# countryName                 = FR
-	# countryName_default         = FR
-	# stateOrProvinceName         = 
-	# stateOrProvinceName_default =
-	# localityName                = Paris
-	# localityName_default        = Paris
-	# organizationName            = ADALTAS
-	# organizationName_default    = ADALTAS
-	# organizationalUnitName      = 
-	# commonName                  = local
-	# emailAddress                = david@adaltas.com
-	# emailAddress_default.       = no-reply@adaltas.com
 	
-	####################################################################
 	[ x509_ext ]
-	
 	subjectKeyIdentifier   = hash
 	authorityKeyIdentifier = keyid:always, issuer
 	basicConstraints       = critical, CA:true
