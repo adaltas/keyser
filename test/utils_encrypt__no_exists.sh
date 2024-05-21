@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_utils_encrypt__no_exists {
-  KEYSER_VAULT_DIR='../tmp/test_utils_encrypt__no_exists'
+function test {
+  KEYSER_VAULT_DIR='../tmp/utils_encrypt__no_exists'
   KEYSER_GPG_MODE=symmetric
   KEYSER_GPG_PASSPHRASE=secret
   mkdir -p $KEYSER_VAULT_DIR
@@ -16,5 +16,5 @@ function test_utils_encrypt__no_exists {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n " s$0: "
-  (test_utils_encrypt__no_exists) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi

@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_cacert_view__gpg {
-  KEYSER_VAULT_DIR='../tmp/test_cacert_view__gpg'
+function test {
+  KEYSER_VAULT_DIR='../tmp/cacert_view__gpg'
   KEYSER_GPG_MODE=symmetric
   KEYSER_GPG_PASSPHRASE=secret
   rm -rf $KEYSER_VAULT_DIR
@@ -20,5 +20,5 @@ function test_cacert_view__gpg {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_cacert_view__gpg) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi

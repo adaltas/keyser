@@ -4,7 +4,7 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_utils_domain {
+function test {
   res=`utils_domain test.domain.com`
   [[ $? != 0 ]] && exit 1
   [[ $res == 'test' ]] || exit 1
@@ -12,5 +12,5 @@ function test_utils_domain {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_utils_domain) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi

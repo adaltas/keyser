@@ -4,8 +4,8 @@
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
-function test_csr_create__exists {
-  KEYSER_VAULT_DIR='../tmp/test_csr_create__exists'
+function test {
+  KEYSER_VAULT_DIR='../tmp/csr_create__exists'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR
@@ -20,5 +20,5 @@ function test_csr_create__exists {
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test_csr_create__exists) && echo 'OK' || echo 'KO'
+  (test) && echo 'OK' || echo 'KO'
 fi
