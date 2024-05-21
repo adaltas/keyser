@@ -330,6 +330,10 @@ cert(){
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert; return 1; fi
   # Argument discovery
   local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
+  if [[ ! -d $ca_fqdn_dir ]]; then
+    echo 'Parent FQDN is not registered in the vault repository, use `cacert` to generate a self-signed certiciate.'
+    exit 1
+  fi
   local subject=`openssl x509 -noout -subject -in $ca_fqdn_dir/cert.pem`;
   country=`echo $subject | sed -n 's/.*C=\([^,]*\),.*/\1/p'`;
   email=`echo $subject | sed -n 's/.*emailAddress=\([^,]*\),*$/\1/p'`;
