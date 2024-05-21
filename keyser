@@ -463,13 +463,12 @@ cert_check_from_file(){
 
 help_cert_export(){
   echo """
-# Description
-#   Check a hostname certificate against the certificate authority.
+Description
+  Export a certificate and its private key into a target directory.
 
-# Usage
-#   keyser cert_check <fqdn> [<cacert_file>]
+Usage
+  keyser cert_export <fqdn> <target>
 
-# Internally, the command localize the certificate inside its store. Then, it call the cert_check_from_file command.
 """
 }
 cert_export(){
