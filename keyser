@@ -708,6 +708,7 @@ csr_sign(){
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
     $intermediate \
     $csr_file $2
+  # Dispose CSR file
   rm $csr_file
 }
 
