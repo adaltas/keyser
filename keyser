@@ -507,6 +507,9 @@ cert_export(){
   if [[ -n "$KEYSER_GPG_MODE" ]]; then
     utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
   fi
+  # Convert x509 certs to PKCS12
+  # openssl pkcs12 -export -out testsign.p12 -inkey testsign.key -in testsign.crt
+  # openssl pkcs12 -export -out rootCA.p12 -inkey rootCA.key -in rootCA.crt
   cp -rp $key_file $target/$(utils_reverse $fqdn).key.pem
   cp -rp $cert_file $target/$(utils_reverse $fqdn).cert.pem
   cat $cacert_file >> $target/$(utils_reverse $fqdn).cert.pem
