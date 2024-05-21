@@ -189,7 +189,7 @@ cacert(){
   openssl req -x509 -new -sha256 \
     -config $fqdn_dir/ca.cnf \
     -subj "/C=$country/O=$organization/L=$location/CN=$fqdn/emailAddress=$email" \
-    ${san:+"-addext"} ${san:+"$san"} \
+    ${san:+-addext "$san"} \
     -addext "nsComment= OpenSSL Generated Certificate by Keyser" \
     -key $fqdn_dir/key.pem -days 7300 \
     -out $fqdn_dir/cert.pem
@@ -337,11 +337,11 @@ cert(){
   organization=`echo $subject | sed -n 's/.*O=\([^,]*\),.*/\1/p'`;
   # Certificate generation
   csr_create \
-    ${address:+'-a'} $address ${dns:+'-d'} $dns \
+    ${address:+"-a $address"} ${dns:+"-d $dns"} \
     -c $country -e $email -l "$location" -o "$organization" \
     $fqdn
   csr_sign \
-    ${address:+'-a'} $address ${dns:+'-d'} $dns \
+    ${address:+"-a $address"} ${dns:+"-d $dns"} \
     $intermediate \
     $fqdn "${@:2}"
 }
@@ -626,7 +626,7 @@ csr_create(){
     -out $fqdn_dir/cert.csr \
     -keyout $fqdn_dir/key.pem \
     -subj "/C=$country/O=$organization/L=$location/CN=${fqdn}/emailAddress=$email" \
-    ${san:+"-addext"} ${san:+"$san"} \
+    ${san:+-addext "$san"} \
     2>/dev/null
   [[ $? != 0 ]] && return 1
   if [[ -z "$KEYSER_GPG_MODE" ]]; then
@@ -690,7 +690,7 @@ csr_sign(){
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign; return 1; fi
   # Sign certificate
   csr_sign_from_file \
-    ${address:+'-a'} $address ${dns:+'-d'} $dns \
+    ${address:+"-a $address"} ${dns:+"-d $dns"} \
     $intermediate \
     $csr_file $2
   rm $csr_file
@@ -766,7 +766,7 @@ csr_sign_from_file(){
     [[ -f "$ca_fqdn_dir/key.pem" ]] && rm $ca_fqdn_dir/key.pem
     utils_decrypt $ca_fqdn_dir/key.pem.gpg $ca_fqdn_dir/key.pem > /dev/null
   fi
-  utils_write_sign_cnf ${address:+'-a'} $address ${dns:+'-d'} $dns $intermediate $fqdn_dir/sign.cnf
+  utils_write_sign_cnf ${address:+"-a $address"} ${dns:+"-d $dns"} $intermediate $fqdn_dir/sign.cnf
   # See [Requirements](https://support.apple.com/en-us/103769) for trusted certificates in iOS 13 and macOS 10.15
   # TLS server certificates must have a validity period of 825 days or fewer (as expressed in the NotBefore and NotAfter fields of the certificate).
   error=$(
