@@ -103,9 +103,9 @@ Usage
   keyser cacert [-cefhlo] <fqdn>
 
 Options
-  -a=<ip...>        Comma-separated list of IP adresses.
+  -a=<ip...>        Comma-separated list of SAN's IP adresses.
   -c=<country>      Country of the issuer.
-  -d=<domain...>    Comma-separated list of domains.
+  -d=<domain...>    Comma-separated list of SAN's DNS domains.
   -e=<email>        Email of the issuer.
   -f                Overwrite existing certificate files if present.
   -h                Print the command help.
@@ -289,8 +289,8 @@ Usage
   keyser cert <fqdn> [<ca_fqdn>]
 
 Options
-  -a=<ip...>        Comma-separated list of IP adresses.
-  -d=<domain...>    Comma-separated list of domains.
+  -a=<ip...>        Comma-separated list of SAN's IP adresses.
+  -d=<domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
 
@@ -566,9 +566,9 @@ Usage
   keyser csr_create [-cehlo] <fqdn>
 
 Options
-  -a=<ip...>        Comma-separated list of IP adresses.
+  -a=<ip...>        Comma-separated list of SAN's IP adresses.
   -c=<country>      Country of the issuer.
-  -d=<domain...>    Comma-separated list of domains.
+  -d=<domain...>    Comma-separated list of SAN's DNS domains.
   -e=<email>        Email of the issuer.
   -h                Print the command help.
   -l=<location>     Location of the issuer.
@@ -650,8 +650,8 @@ Usage
   keyser csr_sign <fqdn> [<ca_fqdn>]
 
 Options
-  -a=<ip...>        Comma-separated list of IP adresses.
-  -d=<domain...>    Comma-separated list of domains.
+  -a=<ip...>        Comma-separated list of SAN's IP adresses.
+  -d=<domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
 
@@ -705,8 +705,8 @@ Usage
   keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
 
 Options
-  -a=<ip...>        Comma-separated list of IP adresses.
-  -d=<domain...>    Comma-separated list of domains.
+  -a=<ip...>        Comma-separated list of SAN's IP adresses.
+  -d=<domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create an intermediate certificate.
   -h                Print the command help.
 
@@ -972,8 +972,8 @@ Usage
   keyser utils_write_sign_cnf <target>
 
 Options
-  -a=<ip...>        Comma-separated list of IP adresses.
-  -d=<domain...>    Comma-separated list of domains.
+  -a=<ip...>        Comma-separated list of SAN's IP adresses.
+  -d=<domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create an intermediate certificate.
   -h                Print the command help.
 
