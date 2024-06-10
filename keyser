@@ -27,8 +27,8 @@ Available Commands:
 
 Environment variables:
   KEYSER_VAULT_DIR       Keys directory storage location.
-  KEYSER_GPG_MODE        Use "symmetric" or leave empty for no encryption.
-  KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption.
+  KEYSER_GPG_MODE        GPG encryption mode, only "symmetric" is supported.
+  KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption or leave empty for no encryption.
 
 Example to view a certificate:
   keyser cacert domain.com
@@ -42,7 +42,6 @@ Example with intermediate certificate:
   keyser cert_check_from_file test.domain.com ./vault/com/domain-3/cert.pem ./vault/com/domain-3/ca.crt
 
 Example with symetric encryption:
-  export KEYSER_GPG_MODE=symmetric
   export KEYSER_GPG_PASSPHRASE=secret
   keyser cacert domain-1.com
 
@@ -59,6 +58,10 @@ Usage
 
 Options
   The command has no option.
+
+A new directory is created at the vault location defined by the `KEYSER_VAULT_DIR` environmental variable.
+
+GPG encryption is automatically enabled with if the `KEYSER_GPG_PASSPHRASE` environmental variable is set.
 """
 }
 init(){
@@ -76,7 +79,7 @@ init(){
   if [[ -n "$help" ]]; then help_init; return 0; fi
   KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-./vault}"
   KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
-  KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE:-''}"
+  KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE}"
   # Validation
   if [[ -n "$KEYSER_GPG_MODE" ]] && [[ $KEYSER_GPG_MODE != "symmetric" ]]; then
     >&2 echo 'Invalid GPG mode, use "symmetric" or leave it empty to disable encryption.'
@@ -88,7 +91,7 @@ init(){
     echo 'Vault created:' $KEYSER_VAULT_DIR
     mkdir -m 700 -p $KEYSER_VAULT_DIR
   fi
-  if [[ -n $KEYSER_GPG_MODE ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
+  if [[ -n $KEYSER_GPG_PASSPHRASE ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
     echo '*.pem' > $KEYSER_VAULT_DIR/.gitignore
     echo 'Git .ignore file created:' $KEYSER_VAULT_DIR/.gitignore
   fi
@@ -166,7 +169,7 @@ cacert(){
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cacert; return 1; fi
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   local key_file="$fqdn_dir/key.pem"
-  if [[ -n "$KEYSER_GPG_MODE" ]]; then
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     key_file+='.gpg'
   fi
   if [[ -d "$fqdn_dir" ]]; then
@@ -194,7 +197,7 @@ cacert(){
     -key $fqdn_dir/key.pem -days 7300 \
     -out $fqdn_dir/cert.pem
   echo 'Certificate authority created:' $fqdn_dir/cert.pem
-  if [[ -z "$KEYSER_GPG_MODE" ]]; then
+  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo 'Certificate key created:' $fqdn_dir/key.pem
   else
     utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
@@ -516,7 +519,7 @@ cert_export(){
   local key_file=$fqdn_dir/key.pem
   local cert_file=$fqdn_dir/cert.pem
   local cacert_file=$fqdn_dir/ca.crt
-  if [[ -n "$KEYSER_GPG_MODE" ]]; then
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
   fi
   # Convert x509 certs to PKCS12
@@ -525,7 +528,7 @@ cert_export(){
   cp -rp $key_file $target/$(utils_reverse $fqdn).key.pem
   cp -rp $cert_file $target/$(utils_reverse $fqdn).cert.pem
   cat $cacert_file >> $target/$(utils_reverse $fqdn).cert.pem
-  if [[ -n "$KEYSER_GPG_MODE" ]]; then
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     rm $fqdn_dir/key.pem
   fi
 }
@@ -644,7 +647,7 @@ csr_create(){
     ${san:+-addext "$san"} \
     2>/dev/null
   [[ $? != 0 ]] && return 1
-  if [[ -z "$KEYSER_GPG_MODE" ]]; then
+  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo 'Key created in:' $fqdn_dir/key.pem
   else
     utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
@@ -778,7 +781,7 @@ csr_sign_from_file(){
     fi
   fi
   # Sign the CSR
-  if [[ -n "$KEYSER_GPG_MODE" ]]; then
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     [[ -f "$ca_fqdn_dir/key.pem" ]] && rm $ca_fqdn_dir/key.pem
     utils_decrypt $ca_fqdn_dir/key.pem.gpg $ca_fqdn_dir/key.pem > /dev/null
   fi
@@ -796,7 +799,7 @@ csr_sign_from_file(){
       2>&1 >/dev/null
   )
   local exit_code=$?
-  if [[ -n "$KEYSER_GPG_MODE" ]]; then
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     rm $ca_fqdn_dir/key.pem
   fi
   if [[ $exit_code != 0 ]]; then echo $error; return 1; fi
@@ -867,31 +870,27 @@ utils_domain(){
 utils_encrypt(){
   local source=$1
   local target=$2
-  if [[ -z "$KEYSER_GPG_MODE" ]]; then
+  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo $source
-  elif [[ $KEYSER_GPG_MODE == "symmetric" ]]; then
+  else
     if [[ ! -f $source ]]; then echo 'No such file to encrypt.'; exit 1; fi
     if [[ -f $target ]]; then rm $target; fi
     gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --symmetric $source
     [[ $? != 0 ]] && echo 'GPG command failed' && return 1
     echo $target
-  else
-    return 1
   fi
 }
 
 utils_decrypt(){
   local source=$1
   local target=$2
-  if [[ -z "$KEYSER_GPG_MODE" ]]; then
+  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo $source
-  elif [[ $KEYSER_GPG_MODE == "symmetric" ]]; then
+  else
     if [[ ! -f $source ]]; then echo 'No such file to decrypt.'; exit 1; fi
     if [[ -f $target ]]; then rm $target; fi
     gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --decrypt $source 2>/dev/null
     echo $target
-  else
-    return 1
   fi
 }
 
