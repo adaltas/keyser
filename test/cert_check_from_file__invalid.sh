@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -19,7 +18,7 @@ function test {
   # Validate certificate
   res=`cert_check_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.pem"`
   [[ $? != 1 ]] && exit 1
-  echo "$res" | grep 'Verification failed:' > /dev/null
+  echo "$res" | grep 'Verification failed:' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

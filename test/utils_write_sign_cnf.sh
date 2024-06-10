@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -10,11 +9,11 @@ function test {
   # Intermediate certificate
   utils_write_sign_cnf -i $KEYSER_VAULT_DIR/sign.cnf
   [[ $? != 0 ]] && exit 1
-  cat $KEYSER_VAULT_DIR/sign.cnf | grep 'basicConstraints=critical,CA:TRUE,pathlen:1' > /dev/null
+  cat $KEYSER_VAULT_DIR/sign.cnf | grep 'basicConstraints=critical,CA:TRUE,pathlen:1' > /dev/null || exit 1
   # Leaf certificate
   utils_write_sign_cnf $KEYSER_VAULT_DIR/sign.cnf
   [[ $? != 0 ]] && exit 1
-  cat $KEYSER_VAULT_DIR/sign.cnf | grep 'basicConstraints=critical,CA:FALSE,pathlen:1' > /dev/null
+  cat $KEYSER_VAULT_DIR/sign.cnf | grep 'basicConstraints=critical,CA:FALSE,pathlen:1' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

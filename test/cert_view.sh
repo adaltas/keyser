@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -16,8 +15,8 @@ function test {
   # View a certificate
   res=`cert_view test.domain.com`
   [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'Certificate:' > /dev/null
-  echo "$res" | grep 'Subject: C=FR, O=O, L=P, CN=test.domain.com, emailAddress=no-reply@domain' > /dev/null
+  echo "$res" | grep 'Certificate:' > /dev/null || exit 1
+  echo "$res" | grep 'Subject: C=FR, O=O, L=P, CN=test.domain.com, emailAddress=no-reply@domain' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

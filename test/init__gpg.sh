@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -16,8 +15,8 @@ function test {
   # In unencrypted mode, no gitignore
   [[ -f "$KEYSER_VAULT_DIR/.gitignore" ]] || exit 1
   # Check command output
-  echo "$out" | grep 'Vault created: ' > /dev/null
-  echo "$out" | grep 'Git .ignore file created: ' > /dev/null
+  echo "$out" | grep 'Vault created: ' > /dev/null || exit 1
+  echo "$out" | grep 'Git .ignore file created: ' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

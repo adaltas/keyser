@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -13,8 +12,8 @@ function test {
   cacert -c PL -o "My Domain" -l Warsawa -e no-reply@domain.com domain.com > /dev/null
   # SAN Validation
   res=`openssl x509 -noout -ext nsComment -in $KEYSER_VAULT_DIR/com.domain/cert.pem`
-  echo "$res" | grep 'Netscape Comment:' > /dev/null
-  echo "$res" | grep 'OpenSSL Generated Certificate by Keyser' > /dev/null
+  echo "$res" | grep 'Netscape Comment:' > /dev/null || exit 1
+  echo "$res" | grep 'OpenSSL Generated Certificate by Keyser' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

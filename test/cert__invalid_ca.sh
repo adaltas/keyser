@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -12,7 +11,7 @@ test() {
   # Create a certificates
   res=`cert test.domain.com domain`
   [[ $? != 1 ]] && exit 1
-  echo "$res" | grep 'Parent FQDN is not registered in the vault repository, use `cacert` to generate a self-signed certiciate.' > /dev/null
+  echo "$res" | grep 'Parent FQDN is not registered in the vault repository, use `cacert` to generate a self-signed certiciate.' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -19,7 +18,7 @@ test() {
   # Certificate validation
   res=`cert_check domain-4.com`
   [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'Certificate is valid.' > /dev/null
+  echo "$res" | grep 'Certificate is valid.' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

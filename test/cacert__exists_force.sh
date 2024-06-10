@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -15,8 +14,8 @@ function test {
   # cacert -f domain.com
   res=`cacert -f -c FR -e no-reply@domain -l P -o O domain.com`
   [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'Certificate key created:' > /dev/null
-  echo "$res" | grep 'Certificate authority created:' > /dev/null
+  echo "$res" | grep 'Certificate key created:' > /dev/null || exit 1
+  echo "$res" | grep 'Certificate authority created:' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -14,7 +13,7 @@ function test {
   # Attempt to overwrite the certificate
   res=`cacert -c FR -e no-reply@domain -l P -o O domain.com`
   [[ $? != 1 ]] && exit 1
-  echo "$res" | grep 'CA certificate files already exists.' > /dev/null
+  echo "$res" | grep 'CA certificate files already exists.' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
