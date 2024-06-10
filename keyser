@@ -581,7 +581,7 @@ Description
   Create a certificate signing request.
 
 Usage
-  keyser csr_create [-cehlo] <fqdn>
+  keyser csr_create [-acdehlo] <fqdn>
 
 Options
   -a=<ip...>        Comma-separated list of SAN's IP adresses.
@@ -761,7 +761,7 @@ csr_sign_from_file(){
   local ca_fqdn=$2
   # Validation
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
-  local fqdn=`openssl req -noout -subject -in  $csr_file | sed -n 's/.*CN=\([^,]*\),.*/\1/p'`;
+  local fqdn=`openssl req -noout -subject -in $csr_file | sed -n 's/.*CN=\([^,]*\),.*/\1/p'`;
   if [[ -z "$ca_fqdn" ]]; then 
     ca_fqdn=${fqdn#*.}
   fi
