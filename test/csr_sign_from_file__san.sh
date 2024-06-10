@@ -17,8 +17,8 @@ function test {
   csr_sign_from_file -d domain.com,test.domain.com -a 127.0.0.1 "$KEYSER_VAULT_DIR/com.domain.test/cert.csr" > /dev/null
   # Validate SAN
   res=`openssl x509 -noout -ext subjectAltName -in $KEYSER_VAULT_DIR/com.domain.test/cert.pem`
-  echo "$res" | grep 'X509v3 Subject Alternative Name:' > /dev/null
-  echo "$res" | grep 'DNS:domain.com, DNS:test.domain.com, IP Address:127.0.0.1' > /dev/null
+  echo "$res" | grep 'X509v3 Subject Alternative Name:' > /dev/null || exit 1
+  echo "$res" | grep 'DNS:domain.com, DNS:test.domain.com, IP Address:127.0.0.1' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

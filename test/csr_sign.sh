@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -17,7 +16,7 @@ function test {
   res=`csr_sign test.domain.com`
   [[ $? != 0 ]] && exit 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem" ]] || exit 1
-  echo "$res" | grep 'Certificate created in:' > /dev/null
+  echo "$res" | grep 'Certificate created in:' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

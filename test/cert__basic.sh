@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -17,9 +16,9 @@ function test {
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/ca.crt" ]] || exit 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem" ]] || exit 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/key.pem" ]] || exit 1
-  echo "$res" | grep 'Key created in:' > /dev/null
-  echo "$res" | grep 'CSR created in:' > /dev/null
-  echo "$res" | grep 'Certificate created in:' > /dev/null
+  echo "$res" | grep 'Key created in:' > /dev/null || exit 1
+  echo "$res" | grep 'CSR created in:' > /dev/null || exit 1
+  echo "$res" | grep 'Certificate created in:' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

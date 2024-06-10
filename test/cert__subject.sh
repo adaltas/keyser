@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -15,7 +14,7 @@ test() {
   cert -c PL -o "My Domain" -l Warsawa -e no-reply@domain.pl domain.pl domain.com >/dev/null
   # Validate subject
   res=`openssl x509 -noout -subject -in $KEYSER_VAULT_DIR/pl.domain/cert.pem`
-  echo "$res" | grep 'subject=C=PL, O=My Domain, L=Warsawa, CN=domain.pl, emailAddress=no-reply@domain.pl' > /dev/null
+  echo "$res" | grep 'subject=C=PL, O=My Domain, L=Warsawa, CN=domain.pl, emailAddress=no-reply@domain.pl' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

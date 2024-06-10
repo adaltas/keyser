@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -16,8 +15,8 @@ function test {
   # SAN Validation
   res=`openssl req -text -in $KEYSER_VAULT_DIR/com.domain.test/cert.csr`
   [[ $? != 0 ]] && (echo $res && exit 1)
-  echo "$res" | grep 'X509v3 Subject Alternative Name:' > /dev/null
-  echo "$res" | grep 'DNS:domain.com, DNS:test.domain.com, IP Address:127.0.0.1' > /dev/null
+  echo "$res" | grep 'X509v3 Subject Alternative Name:' > /dev/null || exit 1
+  echo "$res" | grep 'DNS:domain.com, DNS:test.domain.com, IP Address:127.0.0.1' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -12,7 +11,7 @@ function test {
   # List all certificates from the vault
   res=`cacert_list`
   [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'There are no registered certificate autority in this vault.' > /dev/null
+  echo "$res" | grep 'There are no registered certificate autority in this vault.' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

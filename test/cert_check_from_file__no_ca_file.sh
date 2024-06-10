@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -17,7 +16,7 @@ function test {
   # Discover the certificate in the local vault
   res=`cert_check_from_file $KEYSER_VAULT_DIR/com.domain.test/cert.pem`
   [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'Certificate is valid.' > /dev/null
+  echo "$res" | grep 'Certificate is valid.' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# set -e
 cd `dirname "${BASH_SOURCE}"`
 . ../keyser
 
@@ -15,7 +14,7 @@ function test {
   csr_create -c FR -e no-reply@domain -l P -o O test.domain.com > /dev/null
   res=`csr_create -c FR -e no-reply@domain -l P -o O test.domain.com`
   [[ $? == 0 ]] && exit 1
-  echo "$res" | grep 'FQDN repository already exists.' > /dev/null
+  echo "$res" | grep 'FQDN repository already exists.' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
