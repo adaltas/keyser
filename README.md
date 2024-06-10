@@ -26,7 +26,6 @@ Add Keyser to your path and set the appropriate environment variables. For examp
 ```bash
 export PATH=~/projects/keyser:$PATH
 export KEYSER_VAULT_DIR=~/assets/vault
-export KEYSER_GPG_MODE=symmetric
 export KEYSER_GPG_PASSPHRASE=MySecret
 ```
 
@@ -39,21 +38,23 @@ Usage:
   keyser <command>
 
 Available Commands:
-  keyser cacert <fqdn>
-  keyser cacert_view <fqdn>
-  keyser cert <fqdn> [<ca_fqdn>]
-  keyser cert_check <fqdn> [<cacert_file>]
-  keyser cert_check_from_file <cert_file> [<cacert_file>]
-  keyser cert_view <fqdn>
-  keyser csr_create <fqdn>
-  keyser csr_sign <fqdn> [<ca_fqdn>]
-  keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
-  keyser csr_view <fqdn>
+  cacert [-cefhlo] <fqdn>
+  cacert_view <fqdn>
+  cert <fqdn> [<ca_fqdn>]
+  cert_check <fqdn> [<cacert_file>]
+  cert_check_from_file <cert_file> [<cacert_file>]
+  cert_view <fqdn>
+  csr_create <fqdn>
+  csr_sign <fqdn> [<ca_fqdn>]
+  csr_sign_from_file <csr_file> [<ca_fqdn>]
+  csr_view <fqdn>
+  init
+  version
 
 Environment variables:
   KEYSER_VAULT_DIR       Keys directory storage location.
-  KEYSER_GPG_MODE        Use symmetric or leave empty for no encryption.
-  KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption.
+  KEYSER_GPG_MODE        GPG encryption mode, only symmetric is supported.
+  KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption or leave empty for no encryption.
 
 Example to view a certificate:
   keyser cacert domain.com
@@ -67,7 +68,6 @@ Example with intermediate certificate:
   keyser cert_check_from_file test.domain.com ./vault/com/domain-3/cert.pem ./vault/com/domain-3/ca.crt
 
 Example with symetric encryption:
-  export KEYSER_GPG_MODE=symmetric
   export KEYSER_GPG_PASSPHRASE=secret
   keyser cacert domain-1.com
 ```
