@@ -813,7 +813,11 @@ Description
   Print a CSR.
 
 Usage
-  keyser csr_view <fqdn>
+  keyser csr_view [hs] <fqdn>
+
+Options
+  -h                Print the command help.
+  -s                Print the subject information only.
 
 Print the detailed information of a Certificate Signing Request (CSR) stored inside the vault.
 """
@@ -822,10 +826,13 @@ csr_view(){
   init
   # Parse flags
   local OPTIND help
-  while getopts ":h:" option; do
+  local subject
+  while getopts ":hs" option; do
     case $option in
       h)
         help=1;;
+      s)
+        subject=1;;
       \?)
         echo "Invalid option -$OPTARG"
         return 1;;
@@ -838,8 +845,13 @@ csr_view(){
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_csr_view; return 1; fi
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   if [[ ! -f "$fqdn_dir/cert.csr" ]]; then echo "CSR file for domain \"$fqdn\" does not exist."; help_csr_view; return 1; fi
-  openssl req -noout -text \
-    -in $fqdn_dir/cert.csr
+  if [[ -n $subject ]]; then
+    openssl req -noout -subject \
+      -in $fqdn_dir/cert.csr
+  else
+    openssl req -noout -text \
+      -in $fqdn_dir/cert.csr
+  fi
 }
 
 version(){
