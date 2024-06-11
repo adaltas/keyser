@@ -539,7 +539,11 @@ Description
   Print a certificate.
 
 Usage
-  keyser cert_view <fqdn>
+  keyser cert_view [hs] <fqdn>
+
+Options
+  -h                Print the command help.
+  -s                Print the subject information only.
 
 Print the detailed information of a Certificate Signing Request (CSR) file.
 """
@@ -548,10 +552,13 @@ cert_view(){
   init
   # Parse flags
   local OPTIND help
-  while getopts ":h" option; do
+  local subject
+  while getopts ":hs" option; do
     case $option in
       h)
         help=1;;
+      s)
+        subject=1;;
       \?)
         echo "Invalid option -$OPTARG"
         return 1;;
@@ -565,14 +572,16 @@ cert_view(){
   local fqdn=$1
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_view; return 1; fi
-  # tld=${fqdn#*.}
-  # hostname=${fqdn%%.*}
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  #domain=`openssl x509 -noout -subject -in ca.crt.pem | sed -n '/^subject/s/^.*CN=//p'`
-  #shortname=${fqdn%".$domain"}
-  # shortname=`echo $1 | sed 's/\([[:alnum:]]\)\..*/\1/'`
-  openssl x509 -text -fingerprint \
-    -in $fqdn_dir/cert.pem
+  if [[ ! -f "$fqdn_dir/cert.pem" ]]; then echo "Certificate file for domain \"$fqdn\" does not exist."; help_cert_view; return 1; fi
+  # Obtain certificate information
+  if [[ -n $subject ]]; then
+    openssl x509 -noout -subject \
+      -in $fqdn_dir/cert.pem
+  else
+    openssl x509 -text -fingerprint \
+      -in $fqdn_dir/cert.pem
+  fi
 }
 
 help_csr_create(){
@@ -845,6 +854,7 @@ csr_view(){
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_csr_view; return 1; fi
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   if [[ ! -f "$fqdn_dir/cert.csr" ]]; then echo "CSR file for domain \"$fqdn\" does not exist."; help_csr_view; return 1; fi
+  # Obtain certificate information
   if [[ -n $subject ]]; then
     openssl req -noout -subject \
       -in $fqdn_dir/cert.csr
