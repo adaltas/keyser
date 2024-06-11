@@ -489,16 +489,23 @@ Description
 Usage
   keyser cert_export <fqdn> <target>
 
+Options
+  -c                Create the directory and its itermediate directories.
+  -h                Print the command help.
+
 """
 }
 cert_export(){
   init
   # Parse flags
   local OPTIND help
-  while getopts ":h" option; do
+  local create
+  while getopts ":ch" option; do
     case $option in
       h)
         help=1;;
+      c)
+        create=1;;
       \?)
         echo "Invalid option -$OPTARG"
         return 1;;
@@ -513,6 +520,9 @@ cert_export(){
   local target=$2
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_export; return 1; fi
+  if [[ -n "$create" ]]; then
+    mkdir -p "$target"
+  fi
   if [[ ! -d "$target" ]]; then echo 'Target is not a directory.'; help_cert_export; return 1; fi
   # Work
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
@@ -1052,9 +1062,9 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
       ;;
     csr_sign) csr_sign "${@:2}"
       ;;
-    csr_sign) csr_sign "${@:2}"
-      ;;
     csr_sign_from_file) csr_sign_from_file "${@:2}"
+      ;;
+    csr_view) csr_view "${@:2}"
       ;;
     init) init "${@:2}"
       ;;
