@@ -8,43 +8,44 @@ KEYSER_LAYOUT_VERION="1"
 
 help(){
   echo """
-Usage:
+Usage
   keyser <command>
 
-Available Commands:
-  cacert [-cefhlo] <fqdn>
-  cacert_view <fqdn>
-  cert <fqdn> [<ca_fqdn>]
-  cert_check <fqdn> [<cacert_file>]
-  cert_check_from_file <cert_file> [<cacert_file>]
-  cert_view <fqdn>
-  csr_create <fqdn>
-  csr_sign <fqdn> [<ca_fqdn>]
-  csr_sign_from_file <csr_file> [<ca_fqdn>]
-  csr_view <fqdn>
-  init
-  version
+Available Commands
+  cacert                 Create a certificate authority.
+  cacert_list            List the certificate authorities registered in the vault repository.
+  cacert_view            Print a certificate authority.
+  cert                   Generate a certificate.
+  cert_check             Check a hostname certificate against the certificate authority.
+  cert_check_from_file   Check a certificate against the certificate authority and its key.
+  cert_export            Export a certificate and its private key into a target directory.
+  cert_view              Print a certificate.
+  csr_create             Create a certificate signing request.
+  csr_sign               Sign a CSR givent its path.
+  csr_sign_from_file     Sign a CSR given its path.
+  csr_view               Print a CSR.
+  help                   Print the Keyser help.
+  version                Print the Keyser version.
 
-Environment variables:
+Environment variables
   KEYSER_VAULT_DIR       Keys directory storage location.
   KEYSER_GPG_MODE        GPG encryption mode, only "symmetric" is supported.
   KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption or leave empty for no encryption.
 
-Example to view a certificate:
+Example to view a certificate
   keyser cacert domain.com
   keyser cert test.domain.com
   keyser cert_view test.domain.com
 
-Example with intermediate certificate:
+Example with intermediate certificate
   keyser cacert domain-1.com
   keyser cert domain-2.com domain-1.com
   keyser cert domain-3.com domain-2.com
   keyser cert_check_from_file test.domain.com ./vault/com/domain-3/cert.pem ./vault/com/domain-3/ca.crt
 
-Example with symetric encryption:
+Example with symetric encryption
   export KEYSER_GPG_PASSPHRASE=secret
   keyser cacert domain-1.com
-
 """
 }
 
@@ -103,7 +104,7 @@ Description
   Create a certificate authority.
 
 Usage
-  keyser cacert [-cefhlo] <fqdn>
+  cacert -acdefhlo <fqdn>
 
 Options
   -a=<ip...>        Comma-separated list of SAN's IP adresses.
@@ -289,13 +290,17 @@ Description
   Generate a certificate.
 
 Usage
-  keyser cert <fqdn> [<ca_fqdn>]
+  keyser cert -acdeihlo <fqdn> [<ca_fqdn>]
 
 Options
   -a=<ip...>        Comma-separated list of SAN's IP adresses.
+  -c=<country>      Country of the issuer.
   -d=<domain...>    Comma-separated list of SAN's DNS domains.
+  -e=<email>        Email of the issuer.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
+  -l=<location>     Location of the issuer.
+  -o=<organization> Organization of the issuer.
 
 Generate the certificate and private key for a given hostname. The command combines the csr_create and csr_sign commands for conveniency.
 
@@ -374,6 +379,9 @@ Description
 Usage
   keyser cert_check <fqdn> [<cacert_file>]
 
+Options
+  -h                Print the command help.
+
 Notes
 
   Internally, the command localize the certificate inside its store. Then, it call the cert_check_from_file command.
@@ -410,10 +418,10 @@ cert_check(){
 help_cert_check_from_file(){
   echo """
 Description
-  Check a hostname certificate against the certificate authority and its private key.
+  Check a certificate against the certificate authority and its key.
 
 Usage
-  keyser cert_check_from_file [-ck] <cert_file>
+  keyser cert_check_from_file [-akh] <cert_file>
 
 Options
   -a=<cacert_file>  Path to the certificate authority.
@@ -487,7 +495,7 @@ Description
   Export a certificate and its private key into a target directory.
 
 Usage
-  keyser cert_export <fqdn> <target>
+  keyser cert_export -ch <fqdn> <target>
 
 Options
   -c                Create the directory and its itermediate directories.
@@ -549,7 +557,7 @@ Description
   Print a certificate.
 
 Usage
-  keyser cert_view [hs] <fqdn>
+  keyser cert_view -hs <fqdn>
 
 Options
   -h                Print the command help.
@@ -600,7 +608,7 @@ Description
   Create a certificate signing request.
 
 Usage
-  keyser csr_create [-acdehlo] <fqdn>
+  keyser csr_create -acdehlo <fqdn>
 
 Options
   -a=<ip...>        Comma-separated list of SAN's IP adresses.
@@ -684,7 +692,7 @@ Description
   Sign a CSR givent its path.
 
 Usage
-  keyser csr_sign <fqdn> [<ca_fqdn>]
+  keyser csr_sign -adih <fqdn> [<ca_fqdn>]
 
 Options
   -a=<ip...>        Comma-separated list of SAN's IP adresses.
@@ -740,7 +748,7 @@ Description
   Sign a CSR given its path.
 
 Usage
-  keyser csr_sign_from_file <csr_file> [<ca_fqdn>]
+  keyser csr_sign_from_file -adih <csr_file> [<ca_fqdn>]
 
 Options
   -a=<ip...>        Comma-separated list of SAN's IP adresses.
@@ -833,7 +841,7 @@ Description
   Print a CSR.
 
 Usage
-  keyser csr_view [hs] <fqdn>
+  keyser csr_view -hs <fqdn>
 
 Options
   -h                Print the command help.

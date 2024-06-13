@@ -44,40 +44,42 @@ export KEYSER_GPG_PASSPHRASE=MySecret
 Run the `./keyser` command without any argument to print detailed information.
 
 ```text
-Usage:
+Usage
   keyser <command>
 
-Available Commands:
-  cacert [-cefhlo] <fqdn>
-  cacert_view <fqdn>
-  cert <fqdn> [<ca_fqdn>]
-  cert_check <fqdn> [<cacert_file>]
-  cert_check_from_file <cert_file> [<cacert_file>]
-  cert_view <fqdn>
-  csr_create <fqdn>
-  csr_sign <fqdn> [<ca_fqdn>]
-  csr_sign_from_file <csr_file> [<ca_fqdn>]
-  csr_view <fqdn>
-  init
-  version
+Available Commands
+  cacert                 Create a certificate authority.
+  cacert_list            List the certificate authorities registered in the vault repository.
+  cacert_view            Print a certificate authority.
+  cert                   Generate a certificate.
+  cert_check             Check a hostname certificate against the certificate authority.
+  cert_check_from_file   Check a certificate against the certificate authority and its key.
+  cert_export            Export a certificate and its private key into a target directory.
+  cert_view              Print a certificate.
+  csr_create             Create a certificate signing request.
+  csr_sign               Sign a CSR givent its path.
+  csr_sign_from_file     Sign a CSR given its path.
+  csr_view               Print a CSR.
+  help                   Print the Keyser help.
+  version                Print the Keyser version.
 
-Environment variables:
+Environment variables
   KEYSER_VAULT_DIR       Keys directory storage location.
-  KEYSER_GPG_MODE        GPG encryption mode, only symmetric is supported.
+  KEYSER_GPG_MODE        GPG encryption mode, only "symmetric" is supported.
   KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption or leave empty for no encryption.
 
-Example to view a certificate:
+Example to view a certificate
   keyser cacert domain.com
   keyser cert test.domain.com
   keyser cert_view test.domain.com
 
-Example with intermediate certificate:
+Example with intermediate certificate
   keyser cacert domain-1.com
   keyser cert domain-2.com domain-1.com
   keyser cert domain-3.com domain-2.com
   keyser cert_check_from_file test.domain.com ./vault/com/domain-3/cert.pem ./vault/com/domain-3/ca.crt
 
-Example with symetric encryption:
+Example with symetric encryption
   export KEYSER_GPG_PASSPHRASE=secret
   keyser cacert domain-1.com
 ```
