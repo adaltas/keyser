@@ -5,7 +5,6 @@ cd `dirname "${BASH_SOURCE}"`
 
 function test {
   KEYSER_VAULT_DIR='../tmp/init'
-  KEYSER_GPG_MODE=symmetric
   KEYSER_GPG_PASSPHRASE=secret
   rm -rf $KEYSER_VAULT_DIR
   # Initialize a new vault
