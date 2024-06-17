@@ -5,7 +5,6 @@ cd `dirname "${BASH_SOURCE}"`
 
 function test {
   KEYSER_VAULT_DIR='../tmp/utils_openssl_modulus__gpg'
-  KEYSER_GPG_MODE=symmetric
   KEYSER_GPG_PASSPHRASE=secret
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
