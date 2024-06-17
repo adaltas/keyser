@@ -412,7 +412,15 @@ cert_check(){
   local cert_file=$fqdn_dir/cert.pem
   local cacert_file=$fqdn_dir/ca.crt
   local key_file=$fqdn_dir/key.pem
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
+    utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
+  fi
   cert_check_from_file -a $cacert_file -k $key_file $cert_file
+  cert_check_from_file_code=$?
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
+    rm $key_file
+  fi
+  return $cert_check_from_file_code
 }
 
 help_cert_check_from_file(){
@@ -456,6 +464,8 @@ cert_check_from_file(){
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_cert_check_from_file; return 0; fi
   local cert_file=$1
+  echo '-- key_file' $key_file
+  echo '-- cert_file' $cert_file
   # Validation
   if [[ -z "$cert_file" ]]; then echo 'Certificate file path is missing from arguments.'; help_cert_check_from_file; return 1; fi
   if [[ ! -f $cert_file ]]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
@@ -466,9 +476,6 @@ cert_check_from_file(){
     local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
     cacert_file=$ca_fqdn_dir/cert.pem
   fi
-  echo openssl verify \
-    -CAfile $cacert_file \
-    $cert_file
   openssl verify \
     -CAfile $cacert_file \
     $cert_file \
