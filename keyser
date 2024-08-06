@@ -356,10 +356,12 @@ cert(){
     exit 1
   fi
   local subject=`openssl x509 -noout -subject -in $ca_fqdn_dir/cert.pem`;
-  [[ -z "$country" ]] && country=`echo $subject | sed -n 's/.*C=\([^,]*\),.*/\1/p'`;
-  [[ -z "$email" ]] && email=`echo $subject | sed -n 's/.*emailAddress=\([^,]*\),*$/\1/p'`;
-  [[ -z "$location" ]] && location=`echo $subject | sed -n 's/.*L=\([^,]*\),.*/\1/p'`;
-  [[ -z "$organization" ]] && organization=`echo $subject | sed -n 's/.*O=\([^,]*\),.*/\1/p'`;
+  # Default to CA certificate information
+  # OpenSSL may place spaces around the equal sign
+  [[ -z "$country" ]] && country=`echo $subject | sed -n 's/.*C\s*=\s*\([^,]*\),.*/\1/p'`;
+  [[ -z "$email" ]] && email=`echo $subject | sed -n 's/.*emailAddress\s*=\s*\([^,]*\),*$/\1/p'`;
+  [[ -z "$location" ]] && location=`echo $subject | sed -n 's/.*L\s*=\s*\([^,]*\),.*/\1/p'`;
+  [[ -z "$organization" ]] && organization=`echo $subject | sed -n 's/.*O\s*=\s*\([^,]*\),.*/\1/p'`;
   # Certificate generation
   csr_create \
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
@@ -471,7 +473,8 @@ cert_check_from_file(){
   if [[ ! -f $cert_file ]]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
   if [[ -z "$cacert_file" ]]; then
     # Discover the certificate in the local vault
-    local fqdn=`openssl x509 -noout -subject -in $cert_file | sed -n 's/.*CN=\([^,]*\),.*/\1/p'`;
+    # OpenSSL may place spaces around the equal sign
+    local fqdn=`openssl x509 -noout -subject -in $cert_file | sed -n 's/.*CN\s*=\s*\([^,]*\),.*/\1/p'`;
     local ca_fqdn=${fqdn#*.}
     local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
     cacert_file=$ca_fqdn_dir/cert.pem
@@ -795,7 +798,8 @@ csr_sign_from_file(){
   local ca_fqdn=$2
   # Validation
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
-  local fqdn=`openssl req -noout -subject -in $csr_file | sed -n 's/.*CN=\([^,]*\),.*/\1/p'`;
+    # OpenSSL may place spaces around the equal sign
+  local fqdn=`openssl req -noout -subject -in $csr_file | sed -n 's/.*CN\s*=\s*\([^,]*\),.*/\1/p'`;
   if [[ -z "$ca_fqdn" ]]; then 
     ca_fqdn=${fqdn#*.}
   fi
