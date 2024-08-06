@@ -18,7 +18,7 @@ Keyser is a single Bash script with no external dependency. You can [download th
 Download the script and make it executable.
 
 ```bash
-curl -O https://bit.ly/adaltas-keyser
+curl -o keyser -L https://bit.ly/adaltas-keyser
 chmod u+x keyser
 ./keyser
 ```
@@ -26,9 +26,9 @@ chmod u+x keyser
 Alternatively, the following command downloads and instantly executes Keyser to print its current version.
 
 ```bash
-bash \
-  <(curl -s https://bit.ly/adaltas-keyser) \
-  version
+  bash \
+    <(curl -L -s https://bit.ly/adaltas-keyser) \
+    version
 ```
 
 Add Keyser to your path and set the appropriate environment variables. For example, to enable GPG authentication:
