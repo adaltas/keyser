@@ -3,7 +3,7 @@
 set -e
 pwd=`dirname "${BASH_SOURCE}"`
 
-KEYSER_VERSION="0.0.2"
+KEYSER_VERSION="0.0.3"
 KEYSER_LAYOUT_VERION="1"
 
 help(){
