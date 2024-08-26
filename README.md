@@ -15,7 +15,24 @@ Keyser is a single file bash script used to generate and manage SSL certificates
 
 Keyser is a single Bash script with no external dependency. You can [download the latest version](https://raw.githubusercontent.com/adaltas/keyser/main/keyser) from its GitHub repository.
 
-Download the script and make it executable.
+### Quick install
+
+The recommandation is to install keyser inside the `~/.keyser` folder.
+
+```bash
+mkdir -p ~/.keyser/bin
+curl -o ~/.keyser/bin/keyser -L https://bit.ly/adaltas-keyser
+chmod u+x ~/.keyser/bin/keyser
+echo "PATH=~/.keyser/bin:$PATH" >> ~/.profile
+echo "export KEYSER_VAULT_DIR=~/.keyser/vault" >> ~/.profile
+echo "export KEYSER_GPG_PASSPHRASE=<secret>" >> ~/.profile
+. ~/.profile
+keyser
+```
+
+### Detailed install
+
+Otherwise, Keyser may be downloaded locally and made executable.
 
 ```bash
 curl -o keyser -L https://bit.ly/adaltas-keyser
@@ -26,9 +43,9 @@ chmod u+x keyser
 Alternatively, the following command downloads and instantly executes Keyser to print its current version.
 
 ```bash
-  bash \
-    <(curl -L -s https://bit.ly/adaltas-keyser) \
-    version
+bash \
+  <(curl -L -s https://bit.ly/adaltas-keyser) \
+  version
 ```
 
 Add Keyser to your path and set the appropriate environment variables. For example, to enable GPG authentication:
