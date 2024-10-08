@@ -107,14 +107,14 @@ Usage
   cacert -acdefhlo <fqdn>
 
 Options
-  -a=<ip...>        Comma-separated list of SAN's IP adresses.
-  -c=<country>      Country of the issuer.
-  -d=<domain...>    Comma-separated list of SAN's DNS domains.
-  -e=<email>        Email of the issuer.
+  -a <ip...>        Comma-separated list of SAN's IP adresses.
+  -c <country>      Country of the issuer.
+  -d <domain...>    Comma-separated list of SAN's DNS domains.
+  -e <email>        Email of the issuer.
   -f                Overwrite existing certificate files if present.
   -h                Print the command help.
-  -l=<location>     Location of the issuer.
-  -o=<organization> Organization of the issuer.
+  -l <location>     Location of the issuer.
+  -o <organization> Organization of the issuer.
 
 Example
   keyser cacert \
@@ -293,14 +293,14 @@ Usage
   keyser cert -acdeihlo <fqdn> [<ca_fqdn>]
 
 Options
-  -a=<ip...>        Comma-separated list of SAN's IP adresses.
-  -c=<country>      Country of the issuer.
-  -d=<domain...>    Comma-separated list of SAN's DNS domains.
-  -e=<email>        Email of the issuer.
+  -a <ip...>        Comma-separated list of SAN's IP adresses.
+  -c <country>      Country of the issuer.
+  -d <domain...>    Comma-separated list of SAN's DNS domains.
+  -e <email>        Email of the issuer.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
-  -l=<location>     Location of the issuer.
-  -o=<organization> Organization of the issuer.
+  -l <location>     Location of the issuer.
+  -o <organization> Organization of the issuer.
 
 Generate the certificate and private key for a given hostname. The command combines the csr_create and csr_sign commands for conveniency.
 
@@ -344,7 +344,7 @@ cert(){
   if [[ -n "$help" ]]; then help_cert; return 0; fi
   local fqdn=$1
   local ca_fqdn=$2
-  if [[ -z "$ca_fqdn" ]]; then 
+  if [[ -z "$ca_fqdn" ]]; then
     ca_fqdn=${fqdn#*.}
   fi
   # Validation
@@ -434,8 +434,8 @@ Usage
   keyser cert_check_from_file [-akh] <cert_file>
 
 Options
-  -a=<cacert_file>  Path to the certificate authority.
-  -k=<key_file>     Path to the key file.
+  -a <cacert_file>  Path to the certificate authority.
+  -k <key_file>     Path to the key file.
   -h                Print the command help.
 
 Note
@@ -621,13 +621,13 @@ Usage
   keyser csr_create -acdehlo <fqdn>
 
 Options
-  -a=<ip...>        Comma-separated list of SAN's IP adresses.
-  -c=<country>      Country of the issuer.
-  -d=<domain...>    Comma-separated list of SAN's DNS domains.
-  -e=<email>        Email of the issuer.
+  -a <ip...>        Comma-separated list of SAN's IP adresses.
+  -c <country>      Country of the issuer.
+  -d <domain...>    Comma-separated list of SAN's DNS domains.
+  -e <email>        Email of the issuer.
   -h                Print the command help.
-  -l=<location>     Location of the issuer.
-  -o=<organization> Organization of the issuer.
+  -l <location>     Location of the issuer.
+  -o <organization> Organization of the issuer.
 
 Generate a key and its certificate signing request.
 """
@@ -705,8 +705,8 @@ Usage
   keyser csr_sign -adih <fqdn> [<ca_fqdn>]
 
 Options
-  -a=<ip...>        Comma-separated list of SAN's IP adresses.
-  -d=<domain...>    Comma-separated list of SAN's DNS domains.
+  -a <ip...>        Comma-separated list of SAN's IP adresses.
+  -d <domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
 
@@ -761,8 +761,8 @@ Usage
   keyser csr_sign_from_file -adih <csr_file> [<ca_fqdn>]
 
 Options
-  -a=<ip...>        Comma-separated list of SAN's IP adresses.
-  -d=<domain...>    Comma-separated list of SAN's DNS domains.
+  -a <ip...>        Comma-separated list of SAN's IP adresses.
+  -d <domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create an intermediate certificate.
   -h                Print the command help.
 
@@ -800,7 +800,7 @@ csr_sign_from_file(){
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
     # OpenSSL may place spaces around the equal sign
   local fqdn=`openssl req -noout -subject -in $csr_file | sed -n 's/.*CN\s*=\s*\([^,]*\),.*/\1/p'`;
-  if [[ -z "$ca_fqdn" ]]; then 
+  if [[ -z "$ca_fqdn" ]]; then
     ca_fqdn=${fqdn#*.}
   fi
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
@@ -982,10 +982,10 @@ utils_write_ca_cnf(){
 	# See https://www.openssl.org/docs/man1.1.1/man1/rand.html
   cat <<-'EOF' >$1
 	HOME            = .
-	
+
 	[ ca ]
 	default_ca    = CA_default      # The default ca section
-	
+
 	[ CA_default ]
 	default_days     = 1000         # How long to certify for
 	default_crl_days = 30           # How long before next CRL
@@ -994,16 +994,16 @@ utils_write_ca_cnf(){
 	x509_extensions = x509_ext      # The extensions to add to the cert
 	email_in_dn     = no            # Don't concat the email in the DN
 	copy_extensions = copy          # Required to copy SANs from CSR to cert
-	
+
 	[ req ]
 	default_bits       = 2048
 	default_keyfile    = cakey.pem
 	distinguished_name = subject
 	x509_extensions    = x509_ext
 	string_mask        = utf8only
-  
+
 	[ subject ]
-	
+
 	[ x509_ext ]
 	subjectKeyIdentifier   = hash
 	authorityKeyIdentifier = keyid:always, issuer
@@ -1021,8 +1021,8 @@ Usage
   keyser utils_write_sign_cnf <target>
 
 Options
-  -a=<ip...>        Comma-separated list of SAN's IP adresses.
-  -d=<domain...>    Comma-separated list of SAN's DNS domains.
+  -a <ip...>        Comma-separated list of SAN's IP adresses.
+  -d <domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create an intermediate certificate.
   -h                Print the command help.
 
