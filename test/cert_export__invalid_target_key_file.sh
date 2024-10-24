@@ -11,8 +11,14 @@ function test {
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Create a certificate
   cert test.domain.com > /dev/null
-  # Attempt to export the key
+  # Attempt to export the key on a directory
   mkdir -p $KEYSER_VAULT_DIR/some/target/com.domain.test.key.pem
+  res=`cert_export test.domain.com $KEYSER_VAULT_DIR/some/target`
+  [[ $? == 0 ]] && exit 1
+  echo "$res" | grep 'Target key is not a file.' > /dev/null || exit 1
+  # Attempt to export the key on a file
+  rm -r $KEYSER_VAULT_DIR/some/target/com.domain.test.key.pem
+  touch $KEYSER_VAULT_DIR/some/target/com.domain.test.key.pem
   res=`cert_export test.domain.com $KEYSER_VAULT_DIR/some/target`
   [[ $? == 0 ]] && exit 1
   echo "$res" | grep 'Target key file already exists.' > /dev/null || exit 1

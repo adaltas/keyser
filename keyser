@@ -517,6 +517,7 @@ Usage
 
 Options
   -c                Create the directory and its itermediate directories.
+  -f                Overwrite certificate and key files if present.
   -h                Print the command help.
   fqdn              FQDN of the registered certificate.
   target            Target directory.
@@ -524,19 +525,23 @@ Options
 The certificate file is an SSL certificate chain. It contains the list of certificates starting with the FQDN certificate and ending with the root certificate.
 
 Two files are created. The key is named <reversed_fqdn>.key.pem. The certificate chain is named <reversed_fqdn>.cert.pem.
+
+Unless "-f" is provided, the certificate and key files must not exist.
 """
 }
 cert_export(){
   init
   # Parse flags
   local OPTIND help
-  local create
-  while getopts ":ch" option; do
+  local create force
+  while getopts ":cfh" option; do
     case $option in
-      h)
-        help=1;;
       c)
         create=1;;
+      f)
+        force=1;;
+      h)
+        help=1;;
       \?)
         echo "Invalid option -$OPTARG"
         return 1;;
@@ -557,8 +562,20 @@ cert_export(){
     mkdir -p "$target"
   fi
   if [[ ! -d "$target" ]]; then echo 'Target is not a directory.'; help_cert_export; return 1; fi
-  if [[ -e "$target_key_file" ]]; then echo 'Target key file already exists.'; help_cert_export; return 1; fi
-  if [[ -e "$target_cert_file" ]]; then echo 'Target certificate file already exists.'; help_cert_export; return 1; fi
+  if [[ -z "$force" && -e "$target_key_file" ]]; then
+    if [[ -f "$target_key_file" ]]; then
+    echo 'Target key file already exists.'; help_cert_export; return 1;
+    else
+    echo 'Target key is not a file.'; help_cert_export; return 1;
+    fi
+  fi
+  if [[ -z "$force" && -e "$target_cert_file" ]]; then
+    if [[ -z "$force" && ! -f "$target_cert_file" ]]; then
+      echo 'Target certificate is not a file.'; help_cert_export; return 1;
+    else
+      echo 'Target certificate file already exists.'; help_cert_export; return 1;
+    fi
+  fi
   # Work
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   local key_file=$fqdn_dir/key.pem
@@ -576,6 +593,8 @@ cert_export(){
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     rm $fqdn_dir/key.pem
   fi
+  echo '-- key file:' $key_file
+  echo '-- cert file:' $cert_file
 }
 
 help_cert_view(){
