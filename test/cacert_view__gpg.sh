@@ -13,7 +13,7 @@ function test {
   res=`cacert_view domain.com`
   [[ $? != 0 ]] && exit 1
   echo "$res" | grep 'Certificate:' > /dev/null || exit 1
-  echo "$res" | grep 'Subject: C=FR, O=O, L=P, CN=domain.com, emailAddress=no-reply@domain' > /dev/null || exit 1
+  echo "$res" | egrep 'Subject: C ?= ?FR, O ?= ?O, L ?= ?P, CN ?= ?domain.com, emailAddress ?= ?no-reply@domain' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

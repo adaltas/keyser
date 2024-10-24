@@ -17,7 +17,7 @@ function test {
   # "Certificate Request" shall not be present
   echo "$res" | grep 'Certificate Request:' > /dev/null && exit 1
   # Only the subject shall be present
-  echo "$res" | grep 'subject=C=FR, O=O, L=P, CN=test.domain.com, emailAddress=no-reply@domain' > /dev/null || exit 1
+  echo "$res" | egrep 'subject=C ?= ?FR, O ?= ?O, L ?= ?P, CN ?= ?test.domain.com, emailAddress ?= ?no-reply@domain' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
