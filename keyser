@@ -115,6 +115,7 @@ Options
   -h                Print the command help.
   -l <location>     Location of the issuer.
   -o <organization> Organization of the issuer.
+  fqdn              FQDN of the registered certificate.
 
 Example
   keyser cacert \
@@ -254,6 +255,9 @@ help_cacert_view(){
 Description
   Print a certificate authority.
 
+Options
+  fqdn              FQDN of the registered certificate.
+
 Usage
   keyser cacert_view <fqdn>
 """
@@ -301,6 +305,8 @@ Options
   -h                Print the command help.
   -l <location>     Location of the issuer.
   -o <organization> Organization of the issuer.
+  fqdn              FQDN of the registered certificate.
+  ca_fqdn           Parent FQDN used to sign the CSR.
 
 Generate the certificate and private key for a given hostname. The command combines the csr_create and csr_sign commands for conveniency.
 
@@ -379,10 +385,11 @@ Description
   Check a hostname certificate against the certificate authority.
 
 Usage
-  keyser cert_check <fqdn> [<cacert_file>]
+  keyser cert_check <fqdn>
 
 Options
   -h                Print the command help.
+  fqdn              FQDN of the registered certificate.
 
 Notes
 
@@ -437,6 +444,7 @@ Options
   -a <cacert_file>  Path to the certificate authority.
   -k <key_file>     Path to the key file.
   -h                Print the command help.
+  cert_file         Path to the certificate.
 
 Note
 
@@ -510,7 +518,12 @@ Usage
 Options
   -c                Create the directory and its itermediate directories.
   -h                Print the command help.
+  fqdn              FQDN of the registered certificate.
+  target            Target directory.
 
+The certificate file is an SSL certificate chain. It contains the list of certificates starting with the FQDN certificate and ending with the root certificate.
+
+Two files are created. The key is named <reversed_fqdn>.key.pem. The certificate chain is named <reversed_fqdn>.cert.pem.
 """
 }
 cert_export(){
@@ -536,12 +549,16 @@ cert_export(){
   if [[ -n "$help" ]]; then help_cert_export; return 0; fi
   local fqdn=$1
   local target=$2
+  local target_key_file="$target/$(utils_reverse $fqdn).key.pem"
+  local target_cert_file="$target/$(utils_reverse $fqdn).cert.pem"
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_export; return 1; fi
   if [[ -n "$create" ]]; then
     mkdir -p "$target"
   fi
   if [[ ! -d "$target" ]]; then echo 'Target is not a directory.'; help_cert_export; return 1; fi
+  if [[ -e "$target_key_file" ]]; then echo 'Target key file already exists.'; help_cert_export; return 1; fi
+  if [[ -e "$target_cert_file" ]]; then echo 'Target certificate file already exists.'; help_cert_export; return 1; fi
   # Work
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   local key_file=$fqdn_dir/key.pem
@@ -553,9 +570,9 @@ cert_export(){
   # Convert x509 certs to PKCS12
   # openssl pkcs12 -export -out testsign.p12 -inkey testsign.key -in testsign.crt
   # openssl pkcs12 -export -out rootCA.p12 -inkey rootCA.key -in rootCA.crt
-  cp -rp $key_file $target/$(utils_reverse $fqdn).key.pem
-  cp -rp $cert_file $target/$(utils_reverse $fqdn).cert.pem
-  cat $cacert_file >> $target/$(utils_reverse $fqdn).cert.pem
+  cp -rp $key_file $target_key_file
+  cp -rp $cert_file $target_cert_file
+  cat $cacert_file >> $target_cert_file
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     rm $fqdn_dir/key.pem
   fi
@@ -572,6 +589,7 @@ Usage
 Options
   -h                Print the command help.
   -s                Print the subject information only.
+  fqdn              FQDN of the registered certificate.
 
 Print the detailed information of a Certificate Signing Request (CSR) file.
 """
@@ -709,6 +727,7 @@ Options
   -d <domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
+  fqdn              FQDN of the registered certificate.
 
 Generate a certificate for a managed FQDN with an existing CSR. Internally, it calls the "csr_sign_from_file" command. Note, the CSR is delete upon completion.
 """
@@ -857,6 +876,7 @@ Usage
 Options
   -h                Print the command help.
   -s                Print the subject information only.
+  fqdn              FQDN of the registered certificate.
 
 Print the detailed information of a Certificate Signing Request (CSR) stored inside the vault.
 """
