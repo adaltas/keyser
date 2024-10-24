@@ -6,7 +6,7 @@ cd `dirname "${BASH_SOURCE}"`
 
 function test {
   # Generate a certificate authority
-  res=`version | grep -e '\d\d*\.\d\d*\.\d\d*'`
+  res=`version | egrep '"[0-9]\.[0-9]\.[0-9]"'`
   [[ $? != 0 ]] && exit 1
   true
 }
