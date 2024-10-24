@@ -255,21 +255,30 @@ help_cacert_view(){
 Description
   Print a certificate authority.
 
+Usage
+  keyser cacert_view -hst <fqdn>
+
 Options
+  -h                Print the command help.
+  -s                Print the subject information only.
+  -t                Print text and fingerprint information.
   fqdn              FQDN of the registered certificate.
 
-Usage
-  keyser cacert_view <fqdn>
+The command is an alias of "cert_view".
 """
 }
 cacert_view(){
-  init
   # Parse flags
   local OPTIND help
-  while getopts ":h" option; do
+  local subject text
+  while getopts ":hst" option; do
     case $option in
       h)
         help=1;;
+      s)
+        subject=1;;
+      t)
+        text=1;;
       \?)
         echo "Invalid option -$OPTARG"
         return 1;;
@@ -280,12 +289,7 @@ cacert_view(){
   done
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_cacert_view; return 0; fi
-  local fqdn=$1
-  # Validation
-  if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cacert_view; return 1; fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  openssl x509 -noout -text -fingerprint \
-    -in $fqdn_dir/cert.pem
+  cert_view $@
 }
 
 help_cert(){
