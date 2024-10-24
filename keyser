@@ -603,11 +603,12 @@ Description
   Print a certificate.
 
 Usage
-  keyser cert_view -hs <fqdn>
+  keyser cert_view -hst <fqdn>
 
 Options
   -h                Print the command help.
   -s                Print the subject information only.
+  -t                Print text and fingerprint information.
   fqdn              FQDN of the registered certificate.
 
 Print the detailed information of a Certificate Signing Request (CSR) file.
@@ -617,13 +618,15 @@ cert_view(){
   init
   # Parse flags
   local OPTIND help
-  local subject
-  while getopts ":hs" option; do
+  local subject text
+  while getopts ":hst" option; do
     case $option in
       h)
         help=1;;
       s)
         subject=1;;
+      t)
+        text=1;;
       \?)
         echo "Invalid option -$OPTARG"
         return 1;;
@@ -643,8 +646,11 @@ cert_view(){
   if [[ -n $subject ]]; then
     openssl x509 -noout -subject \
       -in $fqdn_dir/cert.pem
+  elif [[ -n $text ]]; then
+    openssl x509 -noout -text -fingerprint \
+      -in $fqdn_dir/cert.pem
   else
-    openssl x509 -text -fingerprint \
+    openssl x509 \
       -in $fqdn_dir/cert.pem
   fi
 }

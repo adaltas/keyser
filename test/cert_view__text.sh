@@ -12,13 +12,11 @@ function test {
   # Create a certificate
   cert test.domain.com > /dev/null
   # View a certificate
-  res=`cert_view test.domain.com`
+  res=`cert_view -t test.domain.com`
   [[ $? != 0 ]] && exit 1
-  echo "$res" | grep -- '-----BEGIN CERTIFICATE-----' > /dev/null || exit 1
-  echo "$res" | grep -- '-----END CERTIFICATE-----' > /dev/null || exit 1
-
-  # echo "$res" | grep 'Certificate:' > /dev/null || exit 1
-  # echo "$res" | egrep 'Subject: C ?= ?FR, O ?= ?O, L ?= ?P, CN ?= ?test.domain.com, emailAddress ?= ?no-reply@domain' > /dev/null || exit 1
+  echo "$res" | grep 'Certificate:' > /dev/null || exit 1
+  echo "$res" | egrep 'Subject: C ?= ?FR, O ?= ?O, L ?= ?P, CN ?= ?test.domain.com, emailAddress ?= ?no-reply@domain' > /dev/null || exit 1
+  echo "$res" | grep 'SHA1 Fingerprint=' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
