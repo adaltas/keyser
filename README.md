@@ -271,32 +271,32 @@ Then generate the wildcard certificate for all your domain's subdomains:
 
 ```bash
 keyser cert \
-  -d "*.domain.com" \
-  "*.domain.com"
+  -d '*.domain.com" \
+  '*.domain.com'
 ```
 
 Export your certificate to your location:
 
 ```bash
 keyser cert_export -c \
-  "*.domain.com" ~/path/to/your/certs
+  '*.domain.com' ~/path/to/your/certs
 ```
 
 Finally, display your certificate to make sure it has correctly been generated:
 
 ```bash
 keyser cert_view \
-  "*.domain.com"
+  '*.domain.com'
 ```
 
-> When using wildcards, make sure you pass your parameter as a string. 
+When using wildcards, make sure you pass your parameter as a string. 
 
 This will work:
 
 ```bash
 keyser cert \
-  -d "*.domain.com" \
-  "*.domain.com"
+  -d '*.domain.com' \
+  '*.domain.com'
   # Will work ✅
 ```
 While this won't:
