@@ -255,6 +255,60 @@ curl \
 
 To enabling web browsing, the certificate must be uploaded to its registry. On MacOS, the certificate must be loaded to the "Keychain Access" application and, then, marked as trusted. Firefox, Safari and Chrome won't complain about the certificate origin.
 
+## Tutorial for wildcard certificate
+
+Keyser supports wildcard domain certificates, meaning you can generate a single certificate for all subdomains of your domain. You can follow these steps.
+
+Considering you already have a valid CA, generate a first certificate for your root domain:
+
+```bash
+keyser cert -i \
+  -e no-reply@localhost \
+  domain.com
+```
+
+Then generate the wildcard certificate for all your domain's subdomains:
+
+```bash
+keyser cert \
+  -d '*.domain.com" \
+  '*.domain.com'
+```
+
+Export your certificate to your location:
+
+```bash
+keyser cert_export -c \
+  '*.domain.com' ~/path/to/your/certs
+```
+
+Finally, display your certificate to make sure it has correctly been generated:
+
+```bash
+keyser cert_view \
+  '*.domain.com'
+```
+
+When using wildcards, make sure you pass your parameter as a string. 
+
+This will work:
+
+```bash
+keyser cert \
+  -d '*.domain.com' \
+  '*.domain.com'
+  # Will work ✅
+```
+While this won't:
+
+```bash
+keyser cert \
+  -d *.domain.com \
+  *.domain.com
+  # Will not work ❌
+```
+
+
 ## Tests
 
 The test suite is launched with `./test/all.sh`. Run `./test/<name>.sh` to execute a single test.
