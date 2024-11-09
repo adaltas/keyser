@@ -17,7 +17,7 @@ function test {
   # List all certificates from the vault
   res=`cacert_list`
   [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'domain-1.com' > /dev/null || exit 1
+  echo "$res" | grep -w 'domain-1.com' > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

@@ -72,6 +72,7 @@ Available Commands
   cert_check             Check a hostname certificate against the certificate authority.
   cert_check_from_file   Check a certificate against the certificate authority and its key.
   cert_export            Export a certificate and its private key into a target directory.
+  cert_list              List the certificates registered in the vault repository.
   cert_view              Print a certificate.
   csr_create             Create a certificate signing request.
   csr_sign               Sign a CSR givent its path.

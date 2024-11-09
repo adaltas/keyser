@@ -19,6 +19,7 @@ Available Commands
   cert_check             Check a hostname certificate against the certificate authority.
   cert_check_from_file   Check a certificate against the certificate authority and its key.
   cert_export            Export a certificate and its private key into a target directory.
+  cert_list              List the certificates registered in the vault repository.
   cert_view              Print a certificate.
   csr_create             Create a certificate signing request.
   csr_sign               Sign a CSR givent its path.
@@ -601,6 +602,48 @@ cert_export(){
   echo '-- cert file:' $cert_file
 }
 
+help_cert_list(){
+  echo """
+Description
+  List the certificates registered in the vault repository.
+
+Usage
+  keyser cert_list
+"""
+}
+cert_list(){
+  init
+  # Parse flags
+  local OPTIND help
+  while getopts ":h" option; do
+    case $option in
+      h)
+        help=1;;
+      \?)
+        echo "Invalid option -$OPTARG"
+        return 1;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        return 1;;
+    esac
+  done
+  shift $((OPTIND-1))
+  if [[ -n "$help" ]]; then help_cert_list; return 0; fi
+  # Filter all cacerts based an the CA configuration file
+  # Using cat to always get valid exit code, even when no file is found
+  files=`ls $KEYSER_VAULT_DIR/*/ca.crt 2>/dev/null | cat`
+  if [[ ${#files} == 0 ]]; then
+    echo 'There are no registered certificate in this vault.'
+  else
+    for fqdn in $files; do
+      fqdn=`dirname $fqdn`
+      fqdn=`basename $fqdn`
+      fqdn=`utils_reverse $fqdn`
+      echo $fqdn
+    done
+  fi
+}
+
 help_cert_view(){
   echo """
 Description
@@ -1112,6 +1155,8 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   case "$1" in
     cacert) cacert "${@:2}"
       ;;
+    cacert_list) cacert_list "${@:2}"
+      ;;
     cacert_view) cacert_view "${@:2}"
       ;;
     cert) cert "${@:2}"
@@ -1122,7 +1167,7 @@ if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
       ;;
     cert_export) cert_export "${@:2}"
       ;;
-    cacert_list) cacert_list "${@:2}"
+    cert_list) cert_list "${@:2}"
       ;;
     cert_view) cert_view "${@:2}"
       ;;
