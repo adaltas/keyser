@@ -23,7 +23,7 @@ The recommandation is to install keyser inside the `~/.keyser` folder.
 mkdir -p ~/.keyser/bin
 curl -o ~/.keyser/bin/keyser -L https://bit.ly/adaltas-keyser
 chmod u+x ~/.keyser/bin/keyser
-echo "PATH=~/.keyser/bin:$PATH" >> ~/.profile
+echo 'PATH=~/.keyser/bin:$PATH' >> ~/.profile
 echo "export KEYSER_VAULT_DIR=~/.keyser/vault" >> ~/.profile
 echo "export KEYSER_GPG_PASSPHRASE=<secret>" >> ~/.profile
 . ~/.profile
