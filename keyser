@@ -517,7 +517,7 @@ Description
   Export a certificate and its private key into a target directory.
 
 Usage
-  keyser cert_export -ch <fqdn> <target>
+  keyser cert_export -cfh <fqdn> <target>
 
 Options
   -c                Create the directory and its itermediate directories.
