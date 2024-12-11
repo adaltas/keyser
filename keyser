@@ -889,7 +889,10 @@ csr_sign_from_file(){
   # Validation
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
     # OpenSSL may place spaces around the equal sign
-  local fqdn=`openssl req -noout -subject -in $csr_file | sed -n 's/.*CN\s*=\s*\([^,]*\),.*/\1/p'`;
+  local fqdn=`openssl req -noout -subject -in $csr_file | sed -n 's/.*CN\s*=\s*\([^,]*\)\(,.*\|$\)/\1/p'`;
+  if [[ -z "$fqdn" ]]; then
+    echo "Failed to extract the fqdn from the subject CN."; help_csr_sign_from_file; return 1;
+  fi
   if [[ -z "$ca_fqdn" ]]; then
     ca_fqdn=${fqdn#*.}
   fi
