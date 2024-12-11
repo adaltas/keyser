@@ -896,6 +896,8 @@ csr_sign_from_file(){
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
   if [[ ! -d $ca_fqdn_dir ]]; then echo "Missing key for domain \"${ca_fqdn}\" to sign the CSR"; help_csr_sign_from_file; return 1; fi
+  # Creating directory when signing an external CSR
+  mkdir -p $fqdn_dir
   # Place a copy of the CSR file
   if [[ $csr_file != "$fqdn_dir/${csr_file##*/}" ]]; then
     cp -rp $csr_file $fqdn_dir/${csr_file##*/}
