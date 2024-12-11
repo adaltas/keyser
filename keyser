@@ -22,7 +22,7 @@ Available Commands
   cert_list              List the certificates registered in the vault repository.
   cert_view              Print a certificate.
   csr_create             Create a certificate signing request.
-  csr_sign               Sign a CSR givent its path.
+  csr_sign               Sign a CSR given its fqdn name.
   csr_sign_from_file     Sign a CSR given its path.
   csr_view               Print a CSR.
   help                   Print the Keyser help.
@@ -789,7 +789,7 @@ csr_create(){
 help_csr_sign(){
   echo """
 Description
-  Sign a CSR givent its path.
+  Sign a CSR given its fqdn name.
 
 Usage
   keyser csr_sign -adih <fqdn> [<ca_fqdn>]
