@@ -25,6 +25,7 @@ Available Commands
   csr_sign               Sign a CSR given its fqdn name.
   csr_sign_from_file     Sign a CSR given its path.
   csr_view               Print a CSR.
+  init                   Initialize a new vault repository.
   help                   Print the Keyser help.
   version                Print the Keyser version.
 
@@ -310,7 +311,7 @@ Options
   -l <location>     Location of the issuer.
   -o <organization> Organization of the issuer.
   fqdn              FQDN of the registered certificate.
-  ca_fqdn           Parent FQDN used to sign the CSR.
+  ca_fqdn           Parent FQDN used to sign the CSR, optional.
 
 Generate the certificate and private key for a given hostname. The command combines the csr_create and csr_sign commands for conveniency.
 
@@ -717,6 +718,7 @@ Options
   -h                Print the command help.
   -l <location>     Location of the issuer.
   -o <organization> Organization of the issuer.
+  fqdn              FQDN of the generated CSR, used for the subject CN.
 
 Generate a key and its certificate signing request.
 """
@@ -799,8 +801,11 @@ Options
   -i                Create a CSR for an intermediate certificate.
   -h                Print the command help.
   fqdn              FQDN of the registered certificate.
+  ca_fqdn           FQDN of the certificate authority used to sign, optional.
 
-Generate a certificate for a managed FQDN with an existing CSR. Internally, it calls the "csr_sign_from_file" command. Note, the CSR is delete upon completion.
+Generate a certificate for a managed FQDN with an existing CSR.
+
+Internally, it uses the `csr_sign_from_file` command. The CSR is delete upon completion.
 """
 }
 csr_sign(){
@@ -855,8 +860,14 @@ Options
   -d <domain...>    Comma-separated list of SAN's DNS domains.
   -i                Create an intermediate certificate.
   -h                Print the command help.
+  csr_file          Path to the CSR to sign.
+  ca_fqdn           FQDN of the certificate authority used to sign, optional.
 
-Generate a certificate signing request (CSR) for a given file. The Certificate Authority FQDN is optionnal. When not provided, it is extracted from the CSR subject.
+Sign the provided certificate signing request (CSR) file.
+
+The FQDN is extracted from the subject CN and is required. It must be managed by the vault.
+
+The Certificate Authority FQDN is optionnal. When not provided, it is obtain from the FQDN by removing the hostname part.
 """
 }
 csr_sign_from_file(){
@@ -890,6 +901,7 @@ csr_sign_from_file(){
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
     # OpenSSL may place spaces around the equal sign
   local fqdn=`openssl req -noout -subject -in $csr_file | sed -n 's/.*CN\s*=\s*\([^,]*\)\(,.*\|$\)/\1/p'`;
+  # FQDN is extracted from the subject CN and required
   if [[ -z "$fqdn" ]]; then
     echo "Failed to extract the fqdn from the subject CN."; help_csr_sign_from_file; return 1;
   fi
