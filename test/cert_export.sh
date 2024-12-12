@@ -13,6 +13,7 @@ function test {
   cert test.domain.com > /dev/null
   # View a certificate
   mkdir -p $KEYSER_VAULT_DIR/some/target
+  # Export the certificate
   res=`cert_export test.domain.com $KEYSER_VAULT_DIR/some/target`
   [[ $? != 0 ]] && exit 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem ]] || exit 1

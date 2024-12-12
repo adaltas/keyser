@@ -11,7 +11,7 @@ function test {
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Create a certificate
   cert test.domain.com > /dev/null
-  # View a certificate
+  # Export the certificate
   res=`cert_export -c test.domain.com $KEYSER_VAULT_DIR/some/target`
   [[ $? != 0 ]] && exit 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem ]] || exit 1

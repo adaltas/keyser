@@ -10,7 +10,7 @@ function test {
   mkdir -p $KEYSER_VAULT_DIR/tmp
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
-  # Create a certificate
+  # Create a CSR
   openssl req -newkey rsa:2048 -sha256 -nodes \
     -out $KEYSER_VAULT_DIR/tmp/cert.csr \
     -keyout $KEYSER_VAULT_DIR/tmp/key.pem \
