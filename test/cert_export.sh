@@ -18,6 +18,8 @@ function test {
   [[ $? != 0 ]] && exit 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem ]] || exit 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.key.pem ]] || exit 1
+  echo $res | grep -F -- "-- key file: $KEYSER_VAULT_DIR/com.domain.test/key.pem" > /dev/null || exit 1
+  echo $res | grep -F -- "-- cert file: $KEYSER_VAULT_DIR/com.domain.test/cert.pem" > /dev/null || exit 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
