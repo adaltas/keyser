@@ -584,21 +584,24 @@ cert_export(){
   # Work
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   local key_file=$fqdn_dir/key.pem
+  local key_file_gpg=$fqdn_dir/key.pem.gpg
   local cert_file=$fqdn_dir/cert.pem
   local cacert_file=$fqdn_dir/ca.crt
-  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
+  local key_managed=$([[ ( -n "$KEYSER_GPG_PASSPHRASE" && -f $key_file_gpg ) || -f $key_file ]] && echo 1)
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" && -n $key_managed ]]; then
     utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
   fi
   # Convert x509 certs to PKCS12
   # openssl pkcs12 -export -out testsign.p12 -inkey testsign.key -in testsign.crt
   # openssl pkcs12 -export -out rootCA.p12 -inkey rootCA.key -in rootCA.crt
-  cp -rp $key_file $target_key_file
+  # File export
+  [[ -n $key_managed ]] && cp -rp $key_file $target_key_file
   cp -rp $cert_file $target_cert_file
   cat $cacert_file >> $target_cert_file
-  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    rm $fqdn_dir/key.pem
-  fi
-  echo '-- key file:' $key_file
+  # Cleanup
+  [[ -n "$KEYSER_GPG_PASSPHRASE" && -n $key_managed ]] && rm $fqdn_dir/key.pem
+  # Print information
+  [[ -n $key_managed ]] && echo '-- key file:' $key_file
   echo '-- cert file:' $cert_file
 }
 
