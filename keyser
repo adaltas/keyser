@@ -187,7 +187,6 @@ cacert(){
   mkdir -m 700 $fqdn_dir
   # cp -rp $pwd/lib/ca.cnf $fqdn_dir/ca.cnf
   utils_write_ca_cnf $fqdn_dir/ca.cnf
-  sed -i "s|<commonName>|$fqdn|" $fqdn_dir/ca.cnf
   # RSA Private key (create "ca.key.pem")
   openssl genrsa -out $fqdn_dir/key.pem 2048
   # Self-signed (with the key previously generated) root CA certificate (create "ca.crt.pem")
