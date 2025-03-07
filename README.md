@@ -1,4 +1,3 @@
-
 # Keyser - encryption key and certificate management
 
 Keyser is a single file bash script used to generate and manage SSL certificates.
@@ -15,9 +14,11 @@ Keyser is a single file bash script used to generate and manage SSL certificates
 
 Keyser is a single Bash script with no external dependency. You can [download the latest version](https://raw.githubusercontent.com/adaltas/keyser/main/keyser) from its GitHub repository.
 
-### Quick install
+### Quick installation
 
 The recommandation is to install keyser inside the `~/.keyser` folder.
+
+GPG encryption is activated with the `KEYSER_GPG_PASSPHRASE` variable. Don't declare the variable or set it to an empty value to disable GPG encryption of certificate keys.
 
 ```bash
 mkdir -p ~/.keyser/bin
@@ -25,14 +26,15 @@ curl -o ~/.keyser/bin/keyser -L https://bit.ly/adaltas-keyser
 chmod u+x ~/.keyser/bin/keyser
 echo 'PATH=~/.keyser/bin:$PATH' >> ~/.profile
 echo "export KEYSER_VAULT_DIR=~/.keyser/vault" >> ~/.profile
+# Change <secret> with your own value
 echo "export KEYSER_GPG_PASSPHRASE=<secret>" >> ~/.profile
 . ~/.profile
 keyser
 ```
 
-### Detailed install
+### Detailed installation
 
-Otherwise, Keyser may be downloaded locally and made executable.
+Keyser may be downloaded locally and made executable.
 
 ```bash
 curl -o keyser -L https://bit.ly/adaltas-keyser
@@ -48,12 +50,20 @@ bash \
   version
 ```
 
-Add Keyser to your path and set the appropriate environment variables. For example, to enable GPG authentication:
+To enable Keyser on your system, add its downloaded directory to your path and set the `KEYSER_VAULT_DIR` environment variable to an appropriate location. It default to the `./vault` directory.
+
+The example expect the keyser script to be downloaded inside a `~/projects/keyser/bin` directory and a vault located inside a `~/project/keyser/vault` directory.
 
 ```bash
+mkdir -p ~/projects
 export PATH=~/projects/keyser:$PATH
-export KEYSER_VAULT_DIR=~/assets/vault
-export KEYSER_GPG_PASSPHRASE=MySecret
+export KEYSER_VAULT_DIR=~/project/keyser/vault
+```
+
+Additionnally, export the `KEYSER_GPG_PASSPHRASE` to enable GPG authentication of certificate keys.
+
+```bash
+export KEYSER_GPG_PASSPHRASE=<secret>
 ```
 
 ## Usage
@@ -241,7 +251,7 @@ docker run -d --cap-add=NET_ADMIN -p 8443:443 \
 At this point, run curl without any argument shall raise an error because the certificate wasn't signed by a public authority like Let's Encrypt.
 
 ```bash
-curl https://localhost:8443 
+curl https://localhost:8443
 curl: (60) SSL certificate problem: unable to get local issuer certificate
 ```
 
@@ -290,7 +300,7 @@ keyser cert_view \
   '*.domain.com'
 ```
 
-When using wildcards, make sure you pass your parameter as a string. 
+When using wildcards, make sure you pass your parameter as a string.
 
 This will work:
 
@@ -300,6 +310,7 @@ keyser cert \
   '*.domain.com'
   # Will work ✅
 ```
+
 While this won't:
 
 ```bash
@@ -308,7 +319,6 @@ keyser cert \
   *.domain.com
   # Will not work ❌
 ```
-
 
 ## Tests
 
