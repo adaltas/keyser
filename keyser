@@ -1169,6 +1169,20 @@ utils_write_sign_cnf(){
 	EOF
 }
 
+help_utils_sed(){
+  echo """
+Description
+  Execute a command with GNU sed discovery.
+
+Usage
+  keyser help_utils_sed <command>
+
+Options
+  <command>         Command to execute.
+
+Keyser first looks for "gset" and default to "sed". macOS comes with a FreeBSD which is not compatible. Use Homebrew to install gsed instead.
+"""
+}
 utils_sed(){
   if command -v gsed >/dev/null 2>&1; then
     gsed "$@"
