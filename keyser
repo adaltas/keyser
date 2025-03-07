@@ -365,13 +365,12 @@ cert(){
     echo 'Parent FQDN is not registered in the vault repository, use `cacert` to generate a self-signed certiciate.'
     exit 1
   fi
-  local subject=`openssl x509 -noout -subject -in $ca_fqdn_dir/cert.pem`;
-  # Default to CA certificate information
-  # OpenSSL may place spaces around the equal sign
-  [[ -z "$country" ]] && country=`echo $subject | utils_sed -n 's/.*C\s*=\s*\([^,]*\),.*/\1/p'`;
-  [[ -z "$email" ]] && email=`echo $subject | utils_sed -n 's/.*emailAddress\s*=\s*\([^,]*\),*$/\1/p'`;
-  [[ -z "$location" ]] && location=`echo $subject | utils_sed -n 's/.*L\s*=\s*\([^,]*\),.*/\1/p'`;
-  [[ -z "$organization" ]] && organization=`echo $subject | utils_sed -n 's/.*O\s*=\s*\([^,]*\),.*/\1/p'`;
+  # Extract default CA certificate information
+  local subject=`openssl x509 -noout -subject -nameopt sep_multiline -in $ca_fqdn_dir/cert.pem`;
+  [[ -z "$country" ]] && country=`echo "$subject" | grep C= | cut -d'=' -f2`;
+  [[ -z "$email" ]] && email=`echo "$subject" | grep emailAddress= | cut -d'=' -f2`;
+  [[ -z "$location" ]] && location=`echo "$subject" | grep L= | cut -d'=' -f2`;
+  [[ -z "$organization" ]] && organization=`echo "$subject" | grep O= | cut -d'=' -f2`;
   # Certificate generation
   csr_create \
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
@@ -485,8 +484,8 @@ cert_check_from_file(){
   if [[ ! -f $cert_file ]]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
   if [[ -z "$cacert_file" ]]; then
     # Discover the certificate in the local vault
-    # OpenSSL may place spaces around the equal sign
-    local fqdn=`openssl x509 -noout -subject -in $cert_file | utils_sed -n 's/.*CN\s*=\s*\([^,]*\),.*/\1/p'`;
+    # FQDN extraction
+    local fqdn=`openssl x509 -noout -subject -nameopt sep_multiline -in $cert_file | grep CN= | cut -d'=' -f2`;
     local ca_fqdn=${fqdn#*.}
     local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
     cacert_file=$ca_fqdn_dir/cert.pem
@@ -901,9 +900,8 @@ csr_sign_from_file(){
   local ca_fqdn=$2
   # Validation
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
-    # OpenSSL may place spaces around the equal sign
-  local fqdn=`openssl req -noout -subject -in $csr_file | utils_sed -n 's/.*CN\s*=\s*\([^,]*\)\(,.*\|$\)/\1/p'`;
-  # FQDN is extracted from the subject CN and required
+  # FQDN extraction and validation
+  local fqdn=`openssl req -noout -subject -nameopt sep_multiline -in $csr_file | grep CN= | cut -d'=' -f2`;
   if [[ -z "$fqdn" ]]; then
     echo "Failed to extract the fqdn from the subject CN."; help_csr_sign_from_file; return 1;
   fi
@@ -1167,28 +1165,6 @@ utils_write_sign_cnf(){
 	basicConstraints=critical,CA:${intermediate:=FALSE},pathlen:1
 	${san}
 	EOF
-}
-
-help_utils_sed(){
-  echo """
-Description
-  Execute a command with GNU sed discovery.
-
-Usage
-  keyser help_utils_sed <command>
-
-Options
-  <command>         Command to execute.
-
-Keyser first looks for "gset" and default to "sed". macOS comes with a FreeBSD which is not compatible. Use Homebrew to install gsed instead.
-"""
-}
-utils_sed(){
-  if command -v gsed >/dev/null 2>&1; then
-    gsed "$@"
-  else
-    sed "$@"
-  fi
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then

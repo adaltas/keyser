@@ -14,8 +14,6 @@ Keyser is a single file bash script used to generate and manage SSL certificates
 
 Keyser is a single Bash script with no external dependency. You can [download the latest version](https://raw.githubusercontent.com/adaltas/keyser/main/keyser) from its GitHub repository.
 
-macOS comes with a FreeBSD version of sed which is not compatible. Use Homebrew to install gsed instead with `brew install gnu-sed`.
-
 ### Quick installation
 
 The recommandation is to install keyser inside the `~/.keyser` folder.
