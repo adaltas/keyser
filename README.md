@@ -66,6 +66,14 @@ Additionnally, export the `KEYSER_GPG_PASSPHRASE` to enable GPG authentication o
 export KEYSER_GPG_PASSPHRASE=<secret>
 ```
 
+## Upgrading
+
+To upgrade Keyser to its latest version, download the script again.
+
+```bash
+curl -o ~/.keyser/bin/keyser -L https://bit.ly/adaltas-keyser
+```
+
 ## Usage
 
 Run the `./keyser` command without any argument to print detailed information.
