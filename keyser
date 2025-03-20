@@ -131,7 +131,7 @@ Example
 """
 }
 cacert(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND force help
   local country email location organization
@@ -219,7 +219,7 @@ Usage
 """
 }
 cacert_list(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   while getopts ":h" option; do
@@ -269,6 +269,7 @@ The command is an alias of "cert_view".
 """
 }
 cacert_view(){
+  utils_vault_created
   # Parse flags
   local OPTIND help
   local subject text
@@ -320,7 +321,7 @@ The subject information (country, email, location and organization) default to t
 """
 }
 cert(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND intermediate help
   local country email location organization
@@ -400,7 +401,7 @@ Notes
 """
 }
 cert_check(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   while getopts ":h" option; do
@@ -455,7 +456,7 @@ Note
 """
 }
 cert_check_from_file(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   while getopts ":a:k:h" option; do
@@ -533,7 +534,7 @@ Unless "-f" is provided, the certificate and key files must not exist.
 """
 }
 cert_export(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   local create force
@@ -613,7 +614,7 @@ Usage
 """
 }
 cert_list(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   while getopts ":h" option; do
@@ -663,7 +664,7 @@ Print the detailed information of a Certificate Signing Request (CSR) file.
 """
 }
 cert_view(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   local subject text
@@ -725,7 +726,7 @@ Generate a key and its certificate signing request.
 """
 }
 csr_create(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   local country email location organization
@@ -810,7 +811,7 @@ Internally, it uses the `csr_sign_from_file` command. The CSR is delete upon com
 """
 }
 csr_sign(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND intermediate help
   while getopts ":a:d:ih" option; do
@@ -872,7 +873,7 @@ The Certificate Authority FQDN is optionnal. When not provided, it is obtain fro
 """
 }
 csr_sign_from_file(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   local address dns intermediate
@@ -970,7 +971,7 @@ Print the detailed information of a Certificate Signing Request (CSR) stored ins
 """
 }
 csr_view(){
-  init
+  utils_vault_created
   # Parse flags
   local OPTIND help
   local subject
@@ -1085,6 +1086,13 @@ utils_opt_san(){
   echo $san
 }
 
+utils_vault_created(){
+  if [[ ! -d $KEYSER_VAULT_DIR ]]; then
+    echo 'Vault not initialized, run `keyser init` first.' >&2
+    exit  1
+  fi
+}
+
 utils_write_ca_cnf(){
 	# On modern operating systems, RANDFILE is generally no longer necessary.
 	# See https://www.openssl.org/docs/man1.1.1/man1/rand.html
@@ -1169,31 +1177,31 @@ utils_write_sign_cnf(){
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   case "$1" in
-    cacert) cacert "${@:2}"
+    cacert) init && cacert "${@:2}"
       ;;
-    cacert_list) cacert_list "${@:2}"
+    cacert_list) init && cacert_list "${@:2}"
       ;;
-    cacert_view) cacert_view "${@:2}"
+    cacert_view) init && cacert_view "${@:2}"
       ;;
-    cert) cert "${@:2}"
+    cert) init && cert "${@:2}"
       ;;
-    cert_check) cert_check "${@:2}"
+    cert_check) init && cert_check "${@:2}"
       ;;
-    cert_check_from_file) cert_check_from_file "${@:2}"
+    cert_check_from_file) init && cert_check_from_file "${@:2}"
       ;;
-    cert_export) cert_export "${@:2}"
+    cert_export) init && cert_export "${@:2}"
       ;;
-    cert_list) cert_list "${@:2}"
+    cert_list) init && cert_list "${@:2}"
       ;;
-    cert_view) cert_view "${@:2}"
+    cert_view) init && cert_view "${@:2}"
       ;;
-    csr_create) csr_create "${@:2}"
+    csr_create) init && csr_create "${@:2}"
       ;;
-    csr_sign) csr_sign "${@:2}"
+    csr_sign) init && csr_sign "${@:2}"
       ;;
-    csr_sign_from_file) csr_sign_from_file "${@:2}"
+    csr_sign_from_file) init && csr_sign_from_file "${@:2}"
       ;;
-    csr_view) csr_view "${@:2}"
+    csr_view) init && csr_view "${@:2}"
       ;;
     init) init "${@:2}"
       ;;

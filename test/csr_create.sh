@@ -6,7 +6,7 @@ cd `dirname "${BASH_SOURCE}"`
 function test {
   KEYSER_VAULT_DIR='../tmp/csr_create'
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
   # Create a certificate

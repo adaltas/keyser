@@ -6,7 +6,7 @@ cd `dirname "${BASH_SOURCE}"`
 test() {
   KEYSER_VAULT_DIR='../tmp/cert__invalid_ca'
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Create a certificates
   res=`cert test.domain.com domain`
   [[ $? != 1 ]] && exit 1

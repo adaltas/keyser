@@ -7,7 +7,7 @@ function test {
   KEYSER_VAULT_DIR='../tmp/cacert__san'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Generate a certificate authority
   cacert -d local,localhost -a 127.0.0.1 -c PL -o "My Domain" -l Warsawa -e no-reply@domain.com domain.com > /dev/null
   # SAN Validation

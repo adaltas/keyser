@@ -7,7 +7,7 @@ function test {
   KEYSER_VAULT_DIR='../tmp/cacert_list__no_ca'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # List all certificates from the vault
   res=`cacert_list`
   [[ $? != 0 ]] && exit 1

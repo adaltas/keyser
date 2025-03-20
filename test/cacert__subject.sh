@@ -7,7 +7,7 @@ function test {
   KEYSER_VAULT_DIR='../tmp/cacert__subject'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Generate a certificate authority
   cacert -c PL -o "My Domain" -l Warsawa -e no-reply@domain.com domain.com > /dev/null
   # Subject validation

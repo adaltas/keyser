@@ -6,7 +6,7 @@ cd `dirname "${BASH_SOURCE}"`
 function test {
   KEYSER_VAULT_DIR='../tmp/cacert_view'
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Generate a certificate authority
   cacert -c FR -e no-reply@adaltas.com -l Paris -o Adaltas domain.com > /dev/null
   # Validate certificate

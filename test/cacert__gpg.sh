@@ -7,7 +7,7 @@ function test {
   KEYSER_VAULT_DIR='../tmp/cacert__gpg'
   KEYSER_GPG_MODE=symmetric
   KEYSER_GPG_PASSPHRASE=secret
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Generate a certificate authority
   res=`cacert -c FR -e no-reply@domain -l P -o O domain.com`
   [[ $? != 0 ]] && exit 1

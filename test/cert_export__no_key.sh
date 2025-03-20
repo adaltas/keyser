@@ -6,7 +6,7 @@ cd `dirname "${BASH_SOURCE}"`
 function test {
   KEYSER_VAULT_DIR='../tmp/cert_export__no_key'
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   mkdir -p $KEYSER_VAULT_DIR/tmp
   mkdir -p $KEYSER_VAULT_DIR/export
   # Generate a certificate authority

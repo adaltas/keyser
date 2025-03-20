@@ -7,7 +7,7 @@ function test {
   KEYSER_VAULT_DIR='../tmp/cacert__opts'
   KEYSER_GPG_MODE=
   KEYSER_GPG_PASSPHRASE=
-  rm -rf $KEYSER_VAULT_DIR
+  rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Validate country option
   # res=`cert -c FR -e no-reply@domain -l P -o O domain.com test.domain.com`
   res=`cacert -e no-reply@domain -l P -o O domain.com test.domain.com`
