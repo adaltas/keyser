@@ -1,10 +1,9 @@
 #!/bin/bash
 
 set -e
-pwd=`dirname "${BASH_SOURCE}"`
 
-KEYSER_VERSION="0.0.7"
-KEYSER_LAYOUT_VERION="1"
+export KEYSER_VERSION="0.0.7"
+export KEYSER_LAYOUT_VERION="1"
 
 help(){
   echo """
@@ -62,9 +61,9 @@ Usage
 Options
   The command has no option.
 
-A new directory is created at the vault location defined by the `KEYSER_VAULT_DIR` environmental variable.
+A new directory is created at the vault location defined by the \`KEYSER_VAULT_DIR\` environmental variable.
 
-GPG encryption is automatically enabled with if the `KEYSER_GPG_PASSPHRASE` environmental variable is set.
+GPG encryption is automatically enabled with if the \`KEYSER_GPG_PASSPHRASE\` environmental variable is set.
 """
 }
 init(){
@@ -81,8 +80,8 @@ init(){
   # shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_init; return 0; fi
   KEYSER_VAULT_DIR="${KEYSER_VAULT_DIR:-./vault}"
-  KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
-  KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE}"
+  # KEYSER_GPG_MODE="${KEYSER_GPG_MODE}"
+  # KEYSER_GPG_PASSPHRASE="${KEYSER_GPG_PASSPHRASE}"
   # Validation
   if [[ -n "$KEYSER_GPG_MODE" ]] && [[ $KEYSER_GPG_MODE != "symmetric" ]]; then
     >&2 echo 'Invalid GPG mode, use "symmetric" or leave it empty to disable encryption.'
@@ -90,24 +89,24 @@ init(){
     return 1
   fi
   # Storage preparation
-  if [[ ! -d $KEYSER_VAULT_DIR ]]; then
-    echo 'Vault created:' $KEYSER_VAULT_DIR
-    mkdir -m 700 -p $KEYSER_VAULT_DIR
+  if [[ ! -d "$KEYSER_VAULT_DIR" ]]; then
+    echo "Vault created: $KEYSER_VAULT_DIR"
+    mkdir -m 700 -p "$KEYSER_VAULT_DIR"
   fi
-  if [[ -n $KEYSER_GPG_PASSPHRASE ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
-    echo '*.pem' > $KEYSER_VAULT_DIR/.gitignore
-    echo 'Git .ignore file created:' $KEYSER_VAULT_DIR/.gitignore
+  if [[ -n "$KEYSER_GPG_PASSPHRASE" ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
+    echo '*.pem' > "$KEYSER_VAULT_DIR/.gitignore"
+    echo 'Git .ignore file created:' "$KEYSER_VAULT_DIR/.gitignore"
   fi
   # Vault metadata (introduced in version 0.0.8)
-  if [[ ! -f $KEYSER_VAULT_DIR/METADATA ]]; then
-    cat <<META > $KEYSER_VAULT_DIR/METADATA
+  if [[ ! -f "$KEYSER_VAULT_DIR/METADATA" ]]; then
+    cat <<META > "$KEYSER_VAULT_DIR/METADATA"
 VERSION=$KEYSER_VERSION
 LAYOUT_VERSION=1
 META
   fi
   while IFS='=' read -r var value; do
     printf -v "METADATA_$var" %s "$value"
-  done < $KEYSER_VAULT_DIR/METADATA
+  done < "$KEYSER_VAULT_DIR/METADATA"
 }
 
 help_cacert(){
@@ -181,7 +180,7 @@ cacert(){
   if [[ -z "$location" ]]; then echo 'Location is missing from arguments.'; help_cacert; return 1; fi
   if [[ -z "$organization" ]]; then echo 'Organization is missing from arguments.'; help_cacert; return 1; fi
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cacert; return 1; fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
   local key_file="$fqdn_dir/key.pem"
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     key_file+='.gpg'
@@ -194,28 +193,28 @@ cacert(){
     fi
   fi
   # Prepare configuration template
-  mkdir -m 700 $fqdn_dir
+  mkdir -m 700 "$fqdn_dir"
   # cp -rp $pwd/lib/ca.cnf $fqdn_dir/ca.cnf
-  utils_write_ca_cnf $fqdn_dir/ca.cnf
+  utils_write_ca_cnf "$fqdn_dir/ca.cnf"
   # RSA Private key (create "ca.key.pem")
-  openssl genrsa -out $fqdn_dir/key.pem 2048
+  openssl genrsa -out "$fqdn_dir/key.pem" 2048
   # Self-signed (with the key previously generated) root CA certificate (create "ca.crt.pem")
   # man: The req command primarily creates and processes certificate requests in PKCS#10 format.
-  local san=$(utils_opt_san $dns $address)
+  local san=$(utils_opt_san "$dns" "$address")
   openssl req -x509 -new -sha256 \
-    -config $fqdn_dir/ca.cnf \
+    -config "$fqdn_dir/ca.cnf" \
     -subj "/C=$country/O=$organization/L=$location/CN=$fqdn/emailAddress=$email" \
     ${san:+-addext "$san"} \
     -addext "nsComment= OpenSSL Generated Certificate by Keyser" \
-    -key $fqdn_dir/key.pem -days 7300 \
-    -out $fqdn_dir/cert.pem
-  echo 'Certificate authority created:' $fqdn_dir/cert.pem
+    -key "$fqdn_dir/key.pem" -days 7300 \
+    -out "$fqdn_dir/cert.pem"
+  echo "Certificate authority created: $fqdn_dir/cert.pem"
   if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    echo 'Certificate key created:' $fqdn_dir/key.pem
+    echo "Certificate key created: $fqdn_dir/key.pem"
   else
-    utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
-    rm $fqdn_dir/key.pem
-    echo 'Certificate key created:' $fqdn_dir/key.pem.gpg
+    utils_encrypt "$fqdn_dir/key.pem" "$fqdn_dir/key.pem.gpg" > /dev/null
+    rm "$fqdn_dir/key.pem"
+    echo "Certificate key created: $fqdn_dir/key.pem.gpg"
   fi
 }
 
@@ -256,7 +255,7 @@ cacert_list(){
       fqdn=`dirname $fqdn`
       fqdn=`basename $fqdn`
       fqdn=`utils_reverse $fqdn`
-      echo $fqdn
+      echo "$fqdn"
     done
   fi
 }
@@ -300,7 +299,7 @@ cacert_view(){
     esac
   done
   if [[ -n "$help" ]]; then help_cacert_view; return 0; fi
-  cert_view $@
+  cert_view "$@"
 }
 
 help_cert(){
@@ -371,8 +370,8 @@ cert(){
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert; return 1; fi
   # Argument discovery
-  local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
-  if [[ ! -d $ca_fqdn_dir ]]; then
+  local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")
+  if [[ ! -d "$ca_fqdn_dir" ]]; then
     echo 'Parent FQDN is not registered in the vault repository, use `cacert` to generate a self-signed certiciate.'
     exit 1
   fi
@@ -385,12 +384,12 @@ cert(){
   # Certificate generation
   csr_create \
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
-    -c $country -e $email -l "$location" -o "$organization" \
-    $fqdn
+    -c "$country" -e "$email" -l "$location" -o "$organization" \
+    "$fqdn"
   csr_sign \
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
     $intermediate \
-    $fqdn "${@:2}"
+    "$fqdn" "${@:2}"
 }
 
 help_cert_check(){
@@ -432,18 +431,18 @@ cert_check(){
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_check; return 1; fi
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  local cert_file=$fqdn_dir/cert.pem
-  local cacert_file=$fqdn_dir/ca.crt
-  local key_file=$fqdn_dir/key.pem
+  local cert_file="$fqdn_dir/cert.pem"
+  local cacert_file="$fqdn_dir/ca.crt"
+  local key_file="$fqdn_dir/key.pem"
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
+    utils_decrypt "$fqdn_dir/key.pem.gpg" "$key_file" > /dev/null
   fi
-  cert_check_from_file -a $cacert_file -k $key_file $cert_file
+  cert_check_from_file -a "$cacert_file" -k "$key_file" "$cert_file"
   cert_check_from_file_code=$?
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    rm $key_file
+    rm "$key_file"
   fi
-  return $cert_check_from_file_code
+  return "$cert_check_from_file_code"
 }
 
 help_cert_check_from_file(){
@@ -488,18 +487,18 @@ cert_check_from_file(){
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_cert_check_from_file; return 0; fi
   local cert_file=$1
-  echo '-- key_file' $key_file
-  echo '-- cert_file' $cert_file
+  echo "-- key_file $key_file"
+  echo "-- cert_file $cert_file"
   # Validation
   if [[ -z "$cert_file" ]]; then echo 'Certificate file path is missing from arguments.'; help_cert_check_from_file; return 1; fi
-  if [[ ! -f $cert_file ]]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
+  if [[ ! -f "$cert_file" ]]; then echo "Certificate file does not exist: \"$cert_file\"."; return 1; fi
   if [[ -z "$cacert_file" ]]; then
     # Discover the certificate in the local vault
     # FQDN extraction
     local fqdn=`openssl x509 -noout -subject -nameopt sep_multiline -in $cert_file | grep CN= | cut -d'=' -f2`;
     local ca_fqdn=${fqdn#*.}
-    local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
-    cacert_file=$ca_fqdn_dir/cert.pem
+    local ca_fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")"
+    cacert_file="$ca_fqdn_dir/cert.pem"
   fi
   openssl verify \
     -CAfile $cacert_file \
@@ -511,8 +510,8 @@ cert_check_from_file(){
     echo "Verification failed: \`openssl verify\` exit code is $verifyCode."
     return 1
   fi
-  if [[ -n $key_file ]]; then
-    utils_openssl_modulus $key_file $cert_file
+  if [[ -n "$key_file" ]]; then
+    utils_openssl_modulus "$key_file" "$cert_file"
     if [[ $? != 0 ]]; then
       echo "Verification failed: modulus signature don't match."
       return 1
@@ -568,8 +567,8 @@ cert_export(){
   if [[ -n "$help" ]]; then help_cert_export; return 0; fi
   local fqdn=$1
   local target=$2
-  local target_key_file="$target/$(utils_reverse $fqdn).key.pem"
-  local target_cert_file="$target/$(utils_reverse $fqdn).cert.pem"
+  local target_key_file="$target/$(utils_reverse "$fqdn").key.pem"
+  local target_cert_file="$target/$(utils_reverse "$fqdn").cert.pem"
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_export; return 1; fi
   if [[ -n "$create" ]]; then
@@ -591,12 +590,12 @@ cert_export(){
     fi
   fi
   # Work
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  local key_file=$fqdn_dir/key.pem
-  local key_file_gpg=$fqdn_dir/key.pem.gpg
-  local cert_file=$fqdn_dir/cert.pem
-  local cacert_file=$fqdn_dir/ca.crt
-  local key_managed=$([[ ( -n "$KEYSER_GPG_PASSPHRASE" && -f $key_file_gpg ) || -f $key_file ]] && echo 1)
+  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
+  local key_file="$fqdn_dir/key.pem"
+  local key_file_gpg="$fqdn_dir/key.pem.gpg"
+  local cert_file="$fqdn_dir/cert.pem"
+  local cacert_file="$fqdn_dir/ca.crt"
+  local key_managed=$([[ ( -n "$KEYSER_GPG_PASSPHRASE" && -f "$key_file_gpg" ) || -f "$key_file" ]] && echo 1)
   if [[ -n "$KEYSER_GPG_PASSPHRASE" && -n $key_managed ]]; then
     utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
   fi
@@ -704,13 +703,13 @@ cert_view(){
   # Obtain certificate information
   if [[ -n $subject ]]; then
     openssl x509 -noout -subject \
-      -in $fqdn_dir/cert.pem
+      -in "$fqdn_dir/cert.pem"
   elif [[ -n $text ]]; then
     openssl x509 -noout -text -fingerprint \
-      -in $fqdn_dir/cert.pem
+      -in "$fqdn_dir/cert.pem"
   else
     openssl x509 \
-      -in $fqdn_dir/cert.pem
+      -in "$fqdn_dir/cert.pem"
   fi
 }
 
@@ -777,12 +776,12 @@ csr_create(){
   local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
-  if [ -d $fqdn_dir ]; then echo 'FQDN repository already exists.'; help_csr_create; return 1; fi
-  mkdir -m 700 -p $fqdn_dir
+  if [ -d "$fqdn_dir" ]; then echo 'FQDN repository already exists.'; help_csr_create; return 1; fi
+  mkdir -m 700 -p "$fqdn_dir"
   local san=$(utils_opt_san $dns $address)
   openssl req -newkey rsa:2048 -sha256 -nodes \
-    -out $fqdn_dir/cert.csr \
-    -keyout $fqdn_dir/key.pem \
+    -out "$fqdn_dir/cert.csr" \
+    -keyout "$fqdn_dir/key.pem" \
     -subj "/C=$country/O=$organization/L=$location/CN=${fqdn}/emailAddress=$email" \
     ${san:+-addext "$san"} \
     2>/dev/null
@@ -790,13 +789,13 @@ csr_create(){
   if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo 'Key created in:' $fqdn_dir/key.pem
   else
-    utils_encrypt $fqdn_dir/key.pem $fqdn_dir/key.pem.gpg > /dev/null
-    rm $fqdn_dir/key.pem
-    echo 'Key created in:' $fqdn_dir/key.pem.gpg
+    utils_encrypt "$fqdn_dir/key.pem" "$fqdn_dir/key.pem.gpg" > /dev/null
+    rm "$fqdn_dir/key.pem"
+    echo "Key created in: $fqdn_dir/key.pem.gpg"
   fi
   # CSR can be verify with the command
   # openssl req -text -noout -verify -in exemple.csr
-  echo 'CSR created in:' $fqdn_dir/cert.csr
+  echo "CSR created in: $fqdn_dir/cert.csr"
 }
 
 help_csr_sign(){
@@ -854,9 +853,9 @@ csr_sign(){
   csr_sign_from_file \
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
     $intermediate \
-    $csr_file $2
+    "$csr_file" $2
   # Dispose CSR file
-  rm $csr_file
+  rm "$csr_file"
 }
 
 help_csr_sign_from_file(){
@@ -917,30 +916,30 @@ csr_sign_from_file(){
     echo "Failed to extract the fqdn from the subject CN."; help_csr_sign_from_file; return 1;
   fi
   if [[ -z "$ca_fqdn" ]]; then
-    ca_fqdn=${fqdn#*.}
+    ca_fqdn="${fqdn#*.}"
   fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $ca_fqdn)
+  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
+  local ca_fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")"
   if [[ ! -d $ca_fqdn_dir ]]; then echo "Missing key for domain \"${ca_fqdn}\" to sign the CSR"; help_csr_sign_from_file; return 1; fi
   # Creating directory when signing an external CSR
-  mkdir -p $fqdn_dir
+  mkdir -p "$fqdn_dir"
   # Place a copy of the CSR file
-  if [[ $csr_file != "$fqdn_dir/${csr_file##*/}" ]]; then
-    cp -rp $csr_file $fqdn_dir/${csr_file##*/}
+  if [[ "$csr_file" != "$fqdn_dir/${csr_file##*/}" ]]; then
+    cp -rp "$csr_file" "$fqdn_dir/${csr_file##*/}"
   fi
   # Copy the certificate authority
   # Note, naming is inspired by ipa
-  if [[ -f $ca_fqdn_dir/cert.pem ]]; then
-    echo '' > $fqdn_dir/ca.crt
-    cat $ca_fqdn_dir/cert.pem >> $fqdn_dir/ca.crt
-    if [[ -f $ca_fqdn_dir/ca.crt ]]; then
-      cat $ca_fqdn_dir/ca.crt >> $fqdn_dir/ca.crt
+  if [[ -f "$ca_fqdn_dir/cert.pem" ]]; then
+    echo '' > "$fqdn_dir/ca.crt"
+    cat "$ca_fqdn_dir/cert.pem" >> "$fqdn_dir/ca.crt"
+    if [[ -f "$ca_fqdn_dir/ca.crt" ]]; then
+      cat "$ca_fqdn_dir/ca.crt" >> "$fqdn_dir/ca.crt"
     fi
   fi
   # Sign the CSR
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    [[ -f "$ca_fqdn_dir/key.pem" ]] && rm $ca_fqdn_dir/key.pem
-    utils_decrypt $ca_fqdn_dir/key.pem.gpg $ca_fqdn_dir/key.pem > /dev/null
+    [[ -f "$ca_fqdn_dir/key.pem" ]] && rm "$ca_fqdn_dir/key.pem"
+    utils_decrypt "$ca_fqdn_dir/key.pem.gpg" "$ca_fqdn_dir/key.pem" > /dev/null
   fi
   utils_write_sign_cnf ${address:+"-a $address"} ${dns:+"-d $dns"} $intermediate $fqdn_dir/sign.cnf
   # See [Requirements](https://support.apple.com/en-us/103769) for trusted certificates in iOS 13 and macOS 10.15
@@ -948,20 +947,20 @@ csr_sign_from_file(){
   # If you want to copy the extensions from the csr to the crt, add the option `-copy_extensions=copyall`
   error=$(
     openssl x509 -req -sha256 -days 825 \
-      -CA $ca_fqdn_dir/cert.pem -CAkey $ca_fqdn_dir/key.pem \
-      -CAcreateserial -CAserial $ca_fqdn_dir/ca.seq \
-      -extfile $fqdn_dir/sign.cnf \
-      -in $csr_file \
-      -out $fqdn_dir/cert.pem \
+      -CA "$ca_fqdn_dir/cert.pem" -CAkey "$ca_fqdn_dir/key.pem" \
+      -CAcreateserial -CAserial "$ca_fqdn_dir/ca.seq" \
+      -extfile "$fqdn_dir/sign.cnf" \
+      -in "$csr_file" \
+      -out "$fqdn_dir/cert.pem" \
       2>&1 >/dev/null
   )
   local exit_code=$?
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    rm $ca_fqdn_dir/key.pem
+    rm "$ca_fqdn_dir/key.pem"
   fi
   if [[ $exit_code != 0 ]]; then echo $error; return 1; fi
-  echo 'Certificate authority in:' $fqdn_dir/ca.crt
-  echo 'Certificate created in:' $fqdn_dir/cert.pem
+  echo "Certificate authority in: $fqdn_dir/ca.crt"
+  echo "Certificate created in: $fqdn_dir/cert.pem"
 }
 
 help_csr_view(){
@@ -1006,10 +1005,10 @@ csr_view(){
   # Obtain certificate information
   if [[ -n $subject ]]; then
     openssl req -noout -subject \
-      -in $fqdn_dir/cert.csr
+      -in "$fqdn_dir/cert.csr"
   else
     openssl req -noout -text \
-      -in $fqdn_dir/cert.csr
+      -in "$fqdn_dir/cert.csr"
   fi
 }
 
@@ -1042,13 +1041,13 @@ utils_encrypt(){
   local source=$1
   local target=$2
   if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    echo $source
+    echo "$source"
   else
-    if [[ ! -f $source ]]; then echo 'No such file to encrypt.'; exit 1; fi
-    if [[ -f $target ]]; then rm $target; fi
-    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --symmetric $source
+    if [[ ! -f "$source" ]]; then echo 'No such file to encrypt.'; exit 1; fi
+    if [[ -f "$target" ]]; then rm "$target"; fi
+    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output "$target" --symmetric "$source"
     [[ $? != 0 ]] && echo 'GPG command failed' && return 1
-    echo $target
+    echo "$target"
   fi
 }
 
@@ -1056,11 +1055,11 @@ utils_decrypt(){
   local source=$1
   local target=$2
   if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    echo $source
+    echo "$source"
   else
-    if [[ ! -f $source ]]; then echo 'No such file to decrypt.'; exit 1; fi
-    if [[ -f $target ]]; then rm $target; fi
-    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output $target --decrypt $source 2>/dev/null
+    if [[ ! -f "$source" ]]; then echo 'No such file to decrypt.'; exit 1; fi
+    if [[ -f "$target" ]]; then rm $target; fi
+    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output "$target" --decrypt "$source" 2>/dev/null
     echo $target
   fi
 }
@@ -1070,9 +1069,9 @@ utils_openssl_modulus(){
   # See https://support.openprovider.eu/hc/en-us/articles/360038204734-What-to-do-when-my-Private-key-and-Certificate-do-not-match
   local key_file=$1
   local cert_file=$2
-  local keyModulus=`openssl rsa -modulus -noout -in $key_file`
-  local certModulus=`openssl x509 -modulus -noout -in $cert_file`
-  if [[ $keyModulus != $certModulus ]]; then
+  local keyModulus=`openssl rsa -modulus -noout -in "$key_file"`
+  local certModulus=`openssl x509 -modulus -noout -in "$cert_file"`
+  if [[ "$keyModulus" != "$certModulus" ]]; then
     return 1
   fi
 }
@@ -1093,7 +1092,7 @@ utils_opt_san(){
       san+="IP: ${address//,/, address: }"
     fi
   fi
-  echo $san
+  echo "$san"
 }
 
 utils_vault_created(){
