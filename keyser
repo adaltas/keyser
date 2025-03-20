@@ -2,7 +2,7 @@
 
 set -e
 
-export KEYSER_VERSION="0.0.7"
+export KEYSER_VERSION="0.0.8"
 export KEYSER_LAYOUT_VERION="1"
 
 help(){
