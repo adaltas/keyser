@@ -98,6 +98,16 @@ init(){
     echo '*.pem' > $KEYSER_VAULT_DIR/.gitignore
     echo 'Git .ignore file created:' $KEYSER_VAULT_DIR/.gitignore
   fi
+  # Vault metadata (introduced in version 0.0.8)
+  if [[ ! -f $KEYSER_VAULT_DIR/METADATA ]]; then
+    cat <<META > $KEYSER_VAULT_DIR/METADATA
+VERSION=$KEYSER_VERSION
+LAYOUT_VERSION=1
+META
+  fi
+  while IFS='=' read -r var value; do
+    printf -v "METADATA_$var" %s "$value"
+  done < $KEYSER_VAULT_DIR/METADATA
 }
 
 help_cacert(){
