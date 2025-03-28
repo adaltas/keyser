@@ -30,7 +30,7 @@ Available Commands
 
 Environment variables
   KEYSER_VAULT_DIR       Keys directory storage location.
-  KEYSER_GPG_MODE        GPG encryption mode, only "symmetric" is supported.
+  KEYSER_GPG_MODE        GPG encryption mode, only \"symmetric\" is supported.
   KEYSER_GPG_PASSPHRASE  Passphrase used for GPG encryption or leave empty for no encryption.
 
 Example to view a certificate
@@ -180,7 +180,7 @@ cacert(){
   if [[ -z "$location" ]]; then echo 'Location is missing from arguments.'; help_cacert; return 1; fi
   if [[ -z "$organization" ]]; then echo 'Organization is missing from arguments.'; help_cacert; return 1; fi
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cacert; return 1; fi
-  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
+  local -r fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
   local key_file="$fqdn_dir/key.pem"
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     key_file+='.gpg'
@@ -200,7 +200,7 @@ cacert(){
   openssl genrsa -out "$fqdn_dir/key.pem" 2048
   # Self-signed (with the key previously generated) root CA certificate (create "ca.crt.pem")
   # man: The req command primarily creates and processes certificate requests in PKCS#10 format.
-  local san=$(utils_opt_san "$dns" "$address")
+  local -r san=$(utils_opt_san "$dns" "$address")
   openssl req -x509 -new -sha256 \
     -config "$fqdn_dir/ca.cnf" \
     -subj "/C=$country/O=$organization/L=$location/CN=$fqdn/emailAddress=$email" \
@@ -209,7 +209,7 @@ cacert(){
     -key "$fqdn_dir/key.pem" -days 7300 \
     -out "$fqdn_dir/cert.pem"
   echo "Certificate authority created: $fqdn_dir/cert.pem"
-  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
+  if [[ -z "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo "Certificate key created: $fqdn_dir/key.pem"
   else
     utils_encrypt "$fqdn_dir/key.pem" "$fqdn_dir/key.pem.gpg" > /dev/null
@@ -247,14 +247,14 @@ cacert_list(){
   if [[ -n "$help" ]]; then help_cacert_list; return 0; fi
   # Filter all cacerts based an the CA configuration file
   # Using cat to always get valid exit code, even when no file is found
-  files=`ls $KEYSER_VAULT_DIR/*/ca.cnf 2>/dev/null | cat`
+  files=$(find "$KEYSER_VAULT_DIR"/*/ca.cnf 2>/dev/null | cat)
   if [[ ${#files} == 0 ]]; then
     echo 'There are no registered certificate autority in this vault.'
   else
     for fqdn in $files; do
-      fqdn=`dirname $fqdn`
-      fqdn=`basename $fqdn`
-      fqdn=`utils_reverse $fqdn`
+      fqdn=$(dirname "$fqdn")
+      fqdn=$(basename "$fqdn")
+      fqdn=$(utils_reverse "$fqdn")
       echo "$fqdn"
     done
   fi
@@ -274,7 +274,7 @@ Options
   -t                Print text and fingerprint information.
   fqdn              FQDN of the registered certificate.
 
-The command is an alias of "cert_view".
+The command is an alias of \"cert_view\".
 """
 }
 cacert_view(){
@@ -324,7 +324,7 @@ Options
 
 Generate the certificate and private key for a given hostname. The command combines the csr_create and csr_sign commands for conveniency.
 
-The <ca_fqdn> parameter is optional. If not defined, it is currently derived from the <fqdn> sub domain. If not present in the vault repository, the command exit on error. Use the `cacert` command to generate a self-signed certificate.
+The <ca_fqdn> parameter is optional. If not defined, it is currently derived from the <fqdn> sub domain. If not present in the vault repository, the command exit on error. Use the \`cacert\` command to generate a self-signed certificate.
 
 The subject information (country, email, location and organization) default to the CA certificate.
 """
@@ -370,17 +370,17 @@ cert(){
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert; return 1; fi
   # Argument discovery
-  local ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")
+  local -r ca_fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")
   if [[ ! -d "$ca_fqdn_dir" ]]; then
-    echo 'Parent FQDN is not registered in the vault repository, use `cacert` to generate a self-signed certiciate.'
+    echo "Parent FQDN is not registered in the vault repository, use \`cacert\` to generate a self-signed certiciate."
     exit 1
   fi
   # Extract default CA certificate information
-  local subject=`openssl x509 -noout -subject -nameopt sep_multiline -in $ca_fqdn_dir/cert.pem`;
-  [[ -z "$country" ]] && country=`echo "$subject" | grep C= | cut -d'=' -f2`;
-  [[ -z "$email" ]] && email=`echo "$subject" | grep emailAddress= | cut -d'=' -f2`;
-  [[ -z "$location" ]] && location=`echo "$subject" | grep L= | cut -d'=' -f2`;
-  [[ -z "$organization" ]] && organization=`echo "$subject" | grep O= | cut -d'=' -f2`;
+  local -r subject=$(openssl x509 -noout -subject -nameopt sep_multiline -in "$ca_fqdn_dir"/cert.pem);
+  [[ -z "$country" ]] && country=$(echo "$subject" | grep C= | cut -d'=' -f2);
+  [[ -z "$email" ]] && email=$(echo "$subject" | grep emailAddress= | cut -d'=' -f2);
+  [[ -z "$location" ]] && location=$(echo "$subject" | grep L= | cut -d'=' -f2);
+  [[ -z "$organization" ]] && organization=$(echo "$subject" | grep O= | cut -d'=' -f2);
   # Certificate generation
   csr_create \
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
@@ -430,12 +430,12 @@ cert_check(){
   local fqdn=$1
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_check; return 1; fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
-  local cert_file="$fqdn_dir/cert.pem"
-  local cacert_file="$fqdn_dir/ca.crt"
-  local key_file="$fqdn_dir/key.pem"
+  local -r fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")
+  local cert_file="$fqdn_dir"/cert.pem
+  local cacert_file="$fqdn_dir"/ca.crt
+  local key_file="$fqdn_dir"/key.pem
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    utils_decrypt "$fqdn_dir/key.pem.gpg" "$key_file" > /dev/null
+    utils_decrypt "$fqdn_dir"/key.pem.gpg "$key_file" > /dev/null
   fi
   cert_check_from_file -a "$cacert_file" -k "$key_file" "$cert_file"
   cert_check_from_file_code=$?
@@ -461,7 +461,7 @@ Options
 
 Note
 
-  Internally, certificate authority validation uses `openssl verify`. To validate the certificate with its key, we extract and compare the modulus values.
+  Internally, certificate authority validation uses \`openssl verify\`. To validate the certificate with its key, we extract and compare the modulus values.
 """
 }
 cert_check_from_file(){
@@ -495,14 +495,14 @@ cert_check_from_file(){
   if [[ -z "$cacert_file" ]]; then
     # Discover the certificate in the local vault
     # FQDN extraction
-    local fqdn=`openssl x509 -noout -subject -nameopt sep_multiline -in $cert_file | grep CN= | cut -d'=' -f2`;
+    local -r fqdn=$(openssl x509 -noout -subject -nameopt sep_multiline -in "$cert_file" | grep CN= | cut -d'=' -f2);
     local ca_fqdn=${fqdn#*.}
-    local ca_fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")"
-    cacert_file="$ca_fqdn_dir/cert.pem"
+    local -r ca_fqdn_dir="$KEYSER_VAULT_DIR"/$(utils_reverse "$ca_fqdn")
+    cacert_file="$ca_fqdn_dir"/cert.pem
   fi
   openssl verify \
-    -CAfile $cacert_file \
-    $cert_file \
+    -CAfile "$cacert_file" \
+    "$cert_file" \
     >/dev/null \
     2>&1
   local verifyCode=$?
@@ -539,7 +539,7 @@ The certificate file is an SSL certificate chain. It contains the list of certif
 
 Two files are created. The key is named <reversed_fqdn>.key.pem. The certificate chain is named <reversed_fqdn>.cert.pem.
 
-Unless "-f" is provided, the certificate and key files must not exist.
+Unless \"-f\" is provided, the certificate and key files must not exist.
 """
 }
 cert_export(){
@@ -567,8 +567,8 @@ cert_export(){
   if [[ -n "$help" ]]; then help_cert_export; return 0; fi
   local fqdn=$1
   local target=$2
-  local target_key_file="$target/$(utils_reverse "$fqdn").key.pem"
-  local target_cert_file="$target/$(utils_reverse "$fqdn").cert.pem"
+  local -r target_key_file="$target/$(utils_reverse "$fqdn").key.pem"
+  local -r target_cert_file="$target/$(utils_reverse "$fqdn").cert.pem"
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_export; return 1; fi
   if [[ -n "$create" ]]; then
@@ -590,27 +590,27 @@ cert_export(){
     fi
   fi
   # Work
-  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
-  local key_file="$fqdn_dir/key.pem"
-  local key_file_gpg="$fqdn_dir/key.pem.gpg"
-  local cert_file="$fqdn_dir/cert.pem"
-  local cacert_file="$fqdn_dir/ca.crt"
-  local key_managed=$([[ ( -n "$KEYSER_GPG_PASSPHRASE" && -f "$key_file_gpg" ) || -f "$key_file" ]] && echo 1)
+  local -r fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
+  local key_file="$fqdn_dir"/key.pem
+  local key_file_gpg="$fqdn_dir"/key.pem.gpg
+  local cert_file="$fqdn_dir"/cert.pem
+  local cacert_file="$fqdn_dir"/ca.crt
+  local -r key_managed=$([[ ( -n "$KEYSER_GPG_PASSPHRASE" && -f "$key_file_gpg" ) || -f "$key_file" ]] && echo 1)
   if [[ -n "$KEYSER_GPG_PASSPHRASE" && -n $key_managed ]]; then
-    utils_decrypt $fqdn_dir/key.pem.gpg $key_file > /dev/null
+    utils_decrypt "$fqdn_dir"/key.pem.gpg "$key_file" > /dev/null
   fi
   # Convert x509 certs to PKCS12
   # openssl pkcs12 -export -out testsign.p12 -inkey testsign.key -in testsign.crt
   # openssl pkcs12 -export -out rootCA.p12 -inkey rootCA.key -in rootCA.crt
   # File export
-  [[ -n $key_managed ]] && cp -rp $key_file $target_key_file
-  cp -rp $cert_file $target_cert_file
-  cat $cacert_file >> $target_cert_file
+  [[ -n $key_managed ]] && cp -rp "$key_file" "$target_key_file"
+  cp -rp "$cert_file" "$target_cert_file"
+  cat "$cacert_file" >> "$target_cert_file"
   # Cleanup
-  [[ -n "$KEYSER_GPG_PASSPHRASE" && -n $key_managed ]] && rm $fqdn_dir/key.pem
+  [[ -n "$KEYSER_GPG_PASSPHRASE" && -n $key_managed ]] && rm "$fqdn_dir"/key.pem
   # Print information
-  [[ -n $key_managed ]] && echo '-- key file:' $key_file
-  echo '-- cert file:' $cert_file
+  [[ -n $key_managed ]] && echo '-- key file:' "$key_file"
+  echo '-- cert file:' "$cert_file"
 }
 
 help_cert_list(){
@@ -642,15 +642,15 @@ cert_list(){
   if [[ -n "$help" ]]; then help_cert_list; return 0; fi
   # Filter all cacerts based an the CA configuration file
   # Using cat to always get valid exit code, even when no file is found
-  files=`ls $KEYSER_VAULT_DIR/*/ca.crt 2>/dev/null | cat`
+  files=$(find "$KEYSER_VAULT_DIR"/*/ca.crt 2>/dev/null | cat)
   if [[ ${#files} == 0 ]]; then
     echo 'There are no registered certificate in this vault.'
   else
     for fqdn in $files; do
-      fqdn=`dirname $fqdn`
-      fqdn=`basename $fqdn`
-      fqdn=`utils_reverse $fqdn`
-      echo $fqdn
+      fqdn=$(dirname "$fqdn")
+      fqdn=$(basename "$fqdn")
+      fqdn=$(utils_reverse "$fqdn")
+      echo "$fqdn"
     done
   fi
 }
@@ -698,7 +698,7 @@ cert_view(){
   local fqdn=$1
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_view; return 1; fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  local -r fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")
   if [[ ! -f "$fqdn_dir/cert.pem" ]]; then echo "Certificate file for domain \"$fqdn\" does not exist."; help_cert_view; return 1; fi
   # Obtain certificate information
   if [[ -n $subject ]]; then
@@ -773,12 +773,12 @@ csr_create(){
   if [[ -z "$location" ]]; then echo 'Location is missing from arguments.'; help_csr_create; return 1; fi
   if [[ -z "$organization" ]]; then echo 'Organization is missing from arguments.'; help_csr_create; return 1; fi
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_csr_create; return 1; fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  local -r fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
   if [ -d "$fqdn_dir" ]; then echo 'FQDN repository already exists.'; help_csr_create; return 1; fi
   mkdir -m 700 -p "$fqdn_dir"
-  local san=$(utils_opt_san $dns $address)
+  local -r san=$(utils_opt_san "$dns" "$address")
   openssl req -newkey rsa:2048 -sha256 -nodes \
     -out "$fqdn_dir/cert.csr" \
     -keyout "$fqdn_dir/key.pem" \
@@ -786,8 +786,8 @@ csr_create(){
     ${san:+-addext "$san"} \
     2>/dev/null
   [[ $? != 0 ]] && return 1
-  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
-    echo 'Key created in:' $fqdn_dir/key.pem
+  if [[ -z "$KEYSER_GPG_PASSPHRASE" ]]; then
+    echo "Key created in: $fqdn_dir/key.pem"
   else
     utils_encrypt "$fqdn_dir/key.pem" "$fqdn_dir/key.pem.gpg" > /dev/null
     rm "$fqdn_dir/key.pem"
@@ -816,7 +816,7 @@ Options
 
 Generate a certificate for a managed FQDN with an existing CSR.
 
-Internally, it uses the `csr_sign_from_file` command. The CSR is delete upon completion.
+Internally, it uses the \`csr_sign_from_file\` command. The CSR is delete upon completion.
 """
 }
 csr_sign(){
@@ -846,14 +846,14 @@ csr_sign(){
   local fqdn=$1
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_csr_sign; return 1; fi
-  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)"
+  local -r fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
   local csr_file="$fqdn_dir/cert.csr"
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign; return 1; fi
   # Sign certificate
   csr_sign_from_file \
     ${address:+"-a $address"} ${dns:+"-d $dns"} \
     $intermediate \
-    "$csr_file" $2
+    "$csr_file" "$2"
   # Dispose CSR file
   rm "$csr_file"
 }
@@ -911,15 +911,15 @@ csr_sign_from_file(){
   # Validation
   if [[ ! -f $csr_file ]]; then echo "CSR file does not exist: \"$csr_file\"."; help_csr_sign_from_file; return 1; fi
   # FQDN extraction and validation
-  local fqdn=`openssl req -noout -subject -nameopt sep_multiline -in $csr_file | grep CN= | cut -d'=' -f2`;
+  local -r fqdn=$(openssl req -noout -subject -nameopt sep_multiline -in "$csr_file" | grep CN= | cut -d'=' -f2);
   if [[ -z "$fqdn" ]]; then
     echo "Failed to extract the fqdn from the subject CN."; help_csr_sign_from_file; return 1;
   fi
   if [[ -z "$ca_fqdn" ]]; then
     ca_fqdn="${fqdn#*.}"
   fi
-  local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
-  local ca_fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")"
+  local -r fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")"
+  local -r ca_fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse "$ca_fqdn")"
   if [[ ! -d $ca_fqdn_dir ]]; then echo "Missing key for domain \"${ca_fqdn}\" to sign the CSR"; help_csr_sign_from_file; return 1; fi
   # Creating directory when signing an external CSR
   mkdir -p "$fqdn_dir"
@@ -958,7 +958,7 @@ csr_sign_from_file(){
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]]; then
     rm "$ca_fqdn_dir/key.pem"
   fi
-  if [[ $exit_code != 0 ]]; then echo $error; return 1; fi
+  if [[ $exit_code != 0 ]]; then echo "$error"; return 1; fi
   echo "Certificate authority in: $fqdn_dir/ca.crt"
   echo "Certificate created in: $fqdn_dir/cert.pem"
 }
@@ -1000,7 +1000,7 @@ csr_view(){
   local fqdn=$1
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_csr_view; return 1; fi
-  local fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)
+  local -r fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")
   if [[ ! -f "$fqdn_dir/cert.csr" ]]; then echo "CSR file for domain \"$fqdn\" does not exist."; help_csr_view; return 1; fi
   # Obtain certificate information
   if [[ -n $subject ]]; then
@@ -1018,23 +1018,23 @@ version(){
 
 utils_reverse(){
   IFS=. read -ra line <<< "$1"
-  let x=${#line[@]}-1;
+  ((x=${#line[@]}-1))
   while [ "$x" -ge 0 ]; do
     echo -n "${line[$x]}";
     [ $x != 0 ] && echo -n '.';
-    let x--;
+    (( x-- ));
     echo -n ''
   done
 }
 
 utils_tld(){
   local fqdn=$1
-  echo -n ${fqdn#*.}
+  echo -n "${fqdn#*.}"
 }
 
 utils_domain(){
   local fqdn=$1
-  echo -n ${fqdn%%.*}
+  echo -n "${fqdn%%.*}"
 }
 
 utils_encrypt(){
@@ -1058,9 +1058,9 @@ utils_decrypt(){
     echo "$source"
   else
     if [[ ! -f "$source" ]]; then echo 'No such file to decrypt.'; exit 1; fi
-    if [[ -f "$target" ]]; then rm $target; fi
+    if [[ -f "$target" ]]; then rm "$target"; fi
     gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output "$target" --decrypt "$source" 2>/dev/null
-    echo $target
+    echo "$target"
   fi
 }
 
@@ -1069,8 +1069,8 @@ utils_openssl_modulus(){
   # See https://support.openprovider.eu/hc/en-us/articles/360038204734-What-to-do-when-my-Private-key-and-Certificate-do-not-match
   local key_file=$1
   local cert_file=$2
-  local keyModulus=`openssl rsa -modulus -noout -in "$key_file"`
-  local certModulus=`openssl x509 -modulus -noout -in "$cert_file"`
+  local -r keyModulus=$(openssl rsa -modulus -noout -in "$key_file")
+  local -r certModulus=$(openssl x509 -modulus -noout -in "$cert_file")
   if [[ "$keyModulus" != "$certModulus" ]]; then
     return 1
   fi
@@ -1097,7 +1097,7 @@ utils_opt_san(){
 
 utils_vault_created(){
   if [[ ! -d $KEYSER_VAULT_DIR ]]; then
-    echo 'Vault not initialized, run `keyser init` first.' >&2
+    echo "Vault not initialized, run \`keyser init\` first." >&2
     exit  1
   fi
 }
@@ -1105,7 +1105,7 @@ utils_vault_created(){
 utils_write_ca_cnf(){
 	# On modern operating systems, RANDFILE is generally no longer necessary.
 	# See https://www.openssl.org/docs/man1.1.1/man1/rand.html
-  cat <<-'EOF' >$1
+  cat <<-'EOF' > "$1"
 	HOME            = .
 
 	[ ca ]
@@ -1175,8 +1175,8 @@ utils_write_sign_cnf(){
   done
   shift $((OPTIND-1))
   if [[ -n "$help" ]]; then help_utils_write_sign_cnf; return 0; fi
-  local san=$(utils_opt_san $dns $address)
-  cat <<-EOF > $1
+  local -r san=$(utils_opt_san "$dns" "$address")
+  cat <<-EOF > "$1"
 	subjectKeyIdentifier=hash
 	authorityKeyIdentifier=keyid,issuer
 	basicConstraints=critical,CA:${intermediate:=FALSE},pathlen:1
