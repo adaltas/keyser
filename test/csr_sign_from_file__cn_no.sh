@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -16,12 +16,12 @@ function test {
     -keyout $KEYSER_VAULT_DIR/tmp/key.pem \
     -subj "/" 2>/dev/null
   # Sign the certificate
-  res=`csr_sign_from_file "$KEYSER_VAULT_DIR/tmp/cert.csr" domain.com`
-  [[ $? != 1 ]] && exit 1
-  echo "$res" | grep 'Failed to extract the fqdn from the subject CN.' > /dev/null || exit 1
+  res=$(csr_sign_from_file "$KEYSER_VAULT_DIR/tmp/cert.csr" domain.com)
+  [[ $? != 1 ]] && return 1
+  echo "$res" | grep 'Failed to extract the fqdn from the subject CN.' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

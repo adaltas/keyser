@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -13,18 +13,18 @@ function test {
   cert test.domain.com > /dev/null
   # Attempt to export the key on a directory
   mkdir -p $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem
-  res=`cert_export test.domain.com $KEYSER_VAULT_DIR/some/target`
-  [[ $? == 0 ]] && exit 1
-  echo "$res" | grep 'Target certificate is not a file.' > /dev/null || exit 1
+  res=$(cert_export test.domain.com "$KEYSER_VAULT_DIR"/some/target)
+  [[ $? == 0 ]] && return 1
+  echo "$res" | grep 'Target certificate is not a file.' > /dev/null || return 1
   # Attempt to export the key on a file
-  rm -r $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem
-  touch $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem
-  res=`cert_export test.domain.com $KEYSER_VAULT_DIR/some/target`
-  [[ $? == 0 ]] && exit 1
-  echo "$res" | grep 'Target certificate file already exists.' > /dev/null || exit 1
+  rm -r "$KEYSER_VAULT_DIR"/some/target/com.domain.test.cert.pem
+  touch "$KEYSER_VAULT_DIR"/some/target/com.domain.test.cert.pem
+  res=$(cert_export test.domain.com "$KEYSER_VAULT_DIR"/some/target)
+  [[ $? == 0 ]] && return 1
+  echo "$res" | grep 'Target certificate file already exists.' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

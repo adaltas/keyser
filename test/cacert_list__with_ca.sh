@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -15,12 +15,12 @@ function test {
   # # Create a leaf certificate
   cert domain-4.com domain-3.com >/dev/null
   # List all certificates from the vault
-  res=`cacert_list`
-  [[ $? != 0 ]] && exit 1
-  echo "$res" | grep -w 'domain-1.com' > /dev/null || exit 1
+  res=$(cacert_list)
+  [[ $? != 0 ]] && return 1
+  echo "$res" | grep -w 'domain-1.com' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

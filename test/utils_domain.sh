@@ -1,15 +1,15 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
-  res=`utils_domain test.domain.com`
-  [[ $? != 0 ]] && exit 1
-  [[ $res == 'test' ]] || exit 1
+  res=$(utils_domain test.domain.com)
+  [[ $? != 0 ]] && return 1
+  [[ $res == 'test' ]] || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -8,15 +8,15 @@ function test {
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Initialize a new vault
-  out=`init`
+  init
   # Check the metadata file
-  cat "$KEYSER_VAULT_DIR/METADATA" | grep "VERSION=" > /dev/null || exit 1
-  cat "$KEYSER_VAULT_DIR/METADATA" | grep "LAYOUT_VERSION=" > /dev/null || exit 1
-  [[ $METADATA_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
-  [[ $METADATA_LAYOUT_VERSION =~ ^[0-9]+$ ]] || exit 1
+  grep "VERSION=" "$KEYSER_VAULT_DIR/METADATA" > /dev/null 2>&1 || return 1
+  grep "LAYOUT_VERSION=" "$KEYSER_VAULT_DIR/METADATA" > /dev/null 2>&1 || return 1
+  [[ $METADATA_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  [[ $METADATA_LAYOUT_VERSION =~ ^[0-9]+$ ]] || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

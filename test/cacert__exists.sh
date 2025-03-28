@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -11,12 +11,12 @@ function test {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Attempt to overwrite the certificate
-  res=`cacert -c FR -e no-reply@domain -l P -o O domain.com`
-  [[ $? != 1 ]] && exit 1
-  echo "$res" | grep 'CA certificate files already exists.' > /dev/null || exit 1
+  res=$(cacert -c FR -e no-reply@domain -l P -o O domain.com)
+  [[ $? != 1 ]] && return 1
+  echo "$res" | grep 'CA certificate files already exists.' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

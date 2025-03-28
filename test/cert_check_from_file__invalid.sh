@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -15,12 +15,12 @@ function test {
   cacert -c FR -e no-reply@domain -l P -o O invalid.com > /dev/null
   cp -rp "$KEYSER_VAULT_DIR/com.invalid/cert.pem" "$KEYSER_VAULT_DIR/com.domain/cert.pem"
   # Validate certificate
-  res=`cert_check_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.pem"`
-  [[ $? != 1 ]] && exit 1
-  echo "$res" | grep 'Verification failed:' > /dev/null || exit 1
+  res=$(cert_check_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.pem")
+  [[ $? != 1 ]] && return 1
+  echo "$res" | grep 'Verification failed:' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

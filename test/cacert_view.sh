@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -10,13 +10,13 @@ function test {
   # Generate a certificate authority
   cacert -c FR -e no-reply@adaltas.com -l Paris -o Adaltas domain.com > /dev/null
   # Validate certificate
-  res=`cacert_view -t domain.com`
-  [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'Certificate:' > /dev/null || exit 1
-  echo "$res" | egrep 'Subject: C ?= ?FR, O ?= ?Adaltas, L ?= ?Paris, CN ?= ?domain.com, emailAddress ?= ?no-reply@adaltas.com' > /dev/null || exit 1
+  res=$(cacert_view -t domain.com)
+  [[ $? != 0 ]] && return 1
+  echo "$res" | grep 'Certificate:' > /dev/null || return 1
+  echo "$res" | egrep 'Subject: C ?= ?FR, O ?= ?Adaltas, L ?= ?Paris, CN ?= ?domain.com, emailAddress ?= ?no-reply@adaltas.com' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

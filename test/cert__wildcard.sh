@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -10,17 +10,17 @@ function test {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Create a wildcard certificate
-  res=`cert "*.domain.com"`
-  [[ $? != 0 ]] && exit 1
-  [[ -f "$KEYSER_VAULT_DIR/com.domain.*/ca.crt" ]] || exit 1
-  [[ -f "$KEYSER_VAULT_DIR/com.domain.*/cert.pem" ]] || exit 1
-  [[ -f "$KEYSER_VAULT_DIR/com.domain.*/key.pem" ]] || exit 1
-  echo "$res" | grep 'Key created in:' > /dev/null || exit 1
-  echo "$res" | grep 'CSR created in:' > /dev/null || exit 1
-  echo "$res" | grep 'Certificate created in:' > /dev/null || exit 1
+  res=$(cert "*.domain.com")
+  [[ $? != 0 ]] && return 1
+  [[ -f "$KEYSER_VAULT_DIR/com.domain.*/ca.crt" ]] || return 1
+  [[ -f "$KEYSER_VAULT_DIR/com.domain.*/cert.pem" ]] || return 1
+  [[ -f "$KEYSER_VAULT_DIR/com.domain.*/key.pem" ]] || return 1
+  echo "$res" | grep 'Key created in:' > /dev/null || return 1
+  echo "$res" | grep 'CSR created in:' > /dev/null || return 1
+  echo "$res" | grep 'Certificate created in:' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

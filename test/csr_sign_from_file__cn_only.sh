@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
@@ -16,15 +16,15 @@ function test {
     -keyout $KEYSER_VAULT_DIR/tmp/key.pem \
     -subj "/CN=test.domain.com" 2>/dev/null
   # Sign the certificate
-  res=`csr_sign_from_file "$KEYSER_VAULT_DIR/tmp/cert.csr" domain.com`
-  [[ $? != 0 ]] && exit 1
+  csr_sign_from_file "$KEYSER_VAULT_DIR/tmp/cert.csr" domain.com > /dev/null
+  [[ $? != 0 ]] && return 1
   # Parent certificate is copied
-  [[ -f "$KEYSER_VAULT_DIR/com.domain.test/ca.crt" ]] || exit 1
+  [[ -f "$KEYSER_VAULT_DIR/com.domain.test/ca.crt" ]] || return 1
   # CRT is signed
-  [[ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem" ]] || exit 1
+  [[ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem" ]] || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi

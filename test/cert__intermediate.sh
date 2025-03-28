@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd `dirname "${BASH_SOURCE}"`
+cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 test() {
@@ -15,12 +15,12 @@ test() {
   # # Create a leaf certificate
   cert domain-4.com domain-3.com >/dev/null
   # Certificate validation
-  res=`cert_check domain-4.com`
-  [[ $? != 0 ]] && exit 1
-  echo "$res" | grep 'Certificate is valid.' > /dev/null || exit 1
+  res=$(cert_check domain-4.com)
+  [[ $? != 0 ]] && return 1
+  echo "$res" | grep 'Certificate is valid.' > /dev/null || return 1
 }
 
 if [[ "${BASH_SOURCE[0]}" = "$0" ]]; then
   echo -n "$0: "
-  (test) && echo 'OK' || echo 'KO'
+  test && echo 'OK' || echo 'KO'
 fi
