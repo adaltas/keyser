@@ -24,7 +24,7 @@ GPG encryption is activated with the `KEYSER_GPG_PASSPHRASE` variable. Don't dec
 mkdir -p ~/.keyser/bin
 curl -o ~/.keyser/bin/keyser -L https://bit.ly/adaltas-keyser
 chmod u+x ~/.keyser/bin/keyser
-echo 'PATH="$HOME/.keyser/bin:$PATH"' >> ~/.profile
+echo 'PATH="$PATH:~/.keyser/bin"' >> ~/.profile
 echo "export KEYSER_VAULT_DIR=~/.keyser/vault" >> ~/.profile
 # Change <secret> with your own value
 echo "export KEYSER_GPG_PASSPHRASE=<secret>" >> ~/.profile
