@@ -1,7 +1,6 @@
 #!/bin/bash
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
-. ../keyser
+cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 
 function test {
   if command -v shellcheck >/dev/null; then
