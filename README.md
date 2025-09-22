@@ -133,7 +133,7 @@ export KEYSER_GPG_PASSPHRASE=secret
 export KEYSER_VAULT_DIR=/tmp/keyser-tutorial
 ```
 
-The turial start by creating a self-signed certificate authority for the `domain.com` domain. From there, a certificate for the intermediate domain `app.domain.com` is created. It is used to generate leaf certificate for the `www.app.domain.com` and `api.app.domain.com` domains.
+The tutorial start by creating a self-signed certificate authority for the `domain.com` domain. From there, a certificate for the intermediate domain `app.domain.com` is created. It is used to generate leaf certificate for the `www.app.domain.com` and `api.app.domain.com` domains.
 
 Finally, a simple web application is started for testing purpose using Docker.
 
@@ -188,7 +188,7 @@ keyser cert \
   www.app.domain.com
 ```
 
-The second leaf certificate illustrate a more complete scenaria using configuration parameters and the generation of a CSR file.
+The second leaf certificate illustrate a more complete scenario using configuration parameters and the generation of a CSR file.
 
 ```bash
 keyser csr_create \
