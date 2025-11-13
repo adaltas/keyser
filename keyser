@@ -1089,7 +1089,7 @@ utils_opt_san(){
       san+=', '
     fi
     if [[ -n "$address" ]]; then
-      san+="IP: ${address//,/, address: }"
+      san+="IP: ${address//,/, IP: }"
     fi
   fi
   echo "$san"
