@@ -194,7 +194,6 @@ cacert(){
   fi
   # Prepare configuration template
   mkdir -m 700 "$fqdn_dir"
-  # cp -rp $pwd/lib/ca.cnf $fqdn_dir/ca.cnf
   utils_write_ca_cnf "$fqdn_dir/ca.cnf"
   # RSA Private key (create "ca.key.pem")
   openssl genrsa -out "$fqdn_dir/key.pem" 2048
@@ -603,8 +602,8 @@ cert_export(){
   # openssl pkcs12 -export -out testsign.p12 -inkey testsign.key -in testsign.crt
   # openssl pkcs12 -export -out rootCA.p12 -inkey rootCA.key -in rootCA.crt
   # File export
-  [[ -n $key_managed ]] && cp -rp "$key_file" "$target_key_file"
-  cp -rp "$cert_file" "$target_cert_file"
+  [[ -n $key_managed ]] && cp -p "$key_file" "$target_key_file"
+  cp -p "$cert_file" "$target_cert_file"
   cat "$cacert_file" >> "$target_cert_file"
   # Cleanup
   [[ -n "$KEYSER_GPG_PASSPHRASE" && -n $key_managed ]] && rm "$fqdn_dir"/key.pem
@@ -925,7 +924,7 @@ csr_sign_from_file(){
   mkdir -p "$fqdn_dir"
   # Place a copy of the CSR file
   if [[ "$csr_file" != "$fqdn_dir/${csr_file##*/}" ]]; then
-    cp -rp "$csr_file" "$fqdn_dir/${csr_file##*/}"
+    cp -p "$csr_file" "$fqdn_dir/${csr_file##*/}"
   fi
   # Copy the certificate authority
   # Note, naming is inspired by ipa
