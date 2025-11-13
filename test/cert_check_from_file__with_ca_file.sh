@@ -15,8 +15,7 @@ function test {
   mv "$KEYSER_VAULT_DIR"/com.domain/cert.pem "$KEYSER_VAULT_DIR"/parent.cert.pem
   # Validate certificate
   # Provide the certificate as an argument
-  res=$(cert_check_from_file -a "$KEYSER_VAULT_DIR"/parent.cert.pem "$KEYSER_VAULT_DIR"/com.domain.test/cert.pem)
-  [[ $? != 0 ]] && return 1
+  res=$(cert_check_from_file -a "$KEYSER_VAULT_DIR"/parent.cert.pem "$KEYSER_VAULT_DIR"/com.domain.test/cert.pem) || return 1
   echo "$res" | grep 'Certificate is valid.' > /dev/null || return 1
 }
 

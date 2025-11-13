@@ -11,7 +11,7 @@ function test {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   res=$(cacert -c FR -e no-reply@domain -l P -o O domain.com)
-  [[ $? == 0 ]] && return 1
+  [[ $? == 1 ]] || return 1
   echo "$res" | grep 'CA certificate files already exists.' > /dev/null || return 1
 }
 

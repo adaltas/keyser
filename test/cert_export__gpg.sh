@@ -12,10 +12,9 @@ function test {
   # Create a certificate
   cert test.domain.com > /dev/null
   # View a certificate
-  mkdir -p $KEYSER_VAULT_DIR/some/target
+  mkdir -p "$KEYSER_VAULT_DIR"/some/target
   # Export the certificate
-  res=$(cert_export test.domain.com "$KEYSER_VAULT_DIR"/some/target)
-  [[ $? != 0 ]] && return 1
+  res=$(cert_export test.domain.com "$KEYSER_VAULT_DIR"/some/target) || return 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem ]] || return 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.key.pem ]] || return 1
   echo "$res" | grep -F -- "-- key file: $KEYSER_VAULT_DIR/com.domain.test/key.pem" > /dev/null || return 1

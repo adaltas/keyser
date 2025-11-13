@@ -7,12 +7,10 @@ function test {
   KEYSER_VAULT_DIR='../tmp/utils_write_sign_cnf'
   mkdir -p $KEYSER_VAULT_DIR
   # Intermediate certificate
-  utils_write_sign_cnf -i $KEYSER_VAULT_DIR/sign.cnf
-  [[ $? != 0 ]] && return 1
+  utils_write_sign_cnf -i $KEYSER_VAULT_DIR/sign.cnf || return 1
   cat $KEYSER_VAULT_DIR/sign.cnf | grep 'basicConstraints=critical,CA:TRUE,pathlen:1' > /dev/null || return 1
   # Leaf certificate
-  utils_write_sign_cnf $KEYSER_VAULT_DIR/sign.cnf
-  [[ $? != 0 ]] && return 1
+  utils_write_sign_cnf $KEYSER_VAULT_DIR/sign.cnf || return 1
   cat $KEYSER_VAULT_DIR/sign.cnf | grep 'basicConstraints=critical,CA:FALSE,pathlen:1' > /dev/null || return 1
 }
 

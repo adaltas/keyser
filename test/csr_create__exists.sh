@@ -12,7 +12,7 @@ function test {
   # Create a certificate
   csr_create -c FR -e no-reply@domain -l P -o O test.domain.com > /dev/null
   res=$(csr_create -c FR -e no-reply@domain -l P -o O test.domain.com)
-  [[ $? == 0 ]] && return 1
+  [[ $? == 1 ]] || return 1
   echo "$res" | grep 'FQDN repository already exists.' > /dev/null || return 1
 }
 

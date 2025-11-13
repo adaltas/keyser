@@ -12,8 +12,7 @@ function test {
   # Create a certificate
   cert test.domain.com > /dev/null
   # View a certificate
-  res=$(cert_view -s test.domain.com)
-  [[ $? != 0 ]] && return 1
+  res=$(cert_view -s test.domain.com) || return 1
   echo "$res" | grep 'Certificate:' > /dev/null && return 1
   echo "$res" | grep -E 'subject=C ?= ?FR, O ?= ?O, L ?= ?P, CN ?= ?test.domain.com, emailAddress ?= ?no-reply@domain' > /dev/null || return 1
 }

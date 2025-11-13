@@ -91,6 +91,7 @@ init(){
   # Storage preparation
   if [[ ! -d "$KEYSER_VAULT_DIR" ]]; then
     echo "Vault created: $KEYSER_VAULT_DIR"
+    # shellcheck disable=SC2174
     mkdir -m 700 -p "$KEYSER_VAULT_DIR"
   fi
   if [[ -n "$KEYSER_GPG_PASSPHRASE" ]] && [[ ! -f "$KEYSER_VAULT_DIR/.gitignore" ]]; then
@@ -505,16 +506,11 @@ cert_check_from_file(){
     >/dev/null \
     2>&1
   local verifyCode=$?
-  if [[ $verifyCode != 0 ]]; then
-    echo "Verification failed: \`openssl verify\` exit code is $verifyCode."
-    return 1
-  fi
+  [[ $verifyCode != 0 ]] \
+  && { echo "Verification failed: \`openssl verify\` exit code is $verifyCode."; return 1; }
   if [[ -n "$key_file" ]]; then
-    utils_openssl_modulus "$key_file" "$cert_file"
-    if [[ $? != 0 ]]; then
-      echo "Verification failed: modulus signature don't match."
-      return 1
-    fi
+    utils_openssl_modulus "$key_file" "$cert_file" \
+    || { echo "Verification failed: modulus signature don't match."; return 1; }
   fi
   echo 'Certificate is valid.'
 }
@@ -776,6 +772,7 @@ csr_create(){
   # to view the CSR: `openssl req -in toto.cert.csr -noout -text`
   # Sign the CSR (create "hadoop.cert.pem")
   if [ -d "$fqdn_dir" ]; then echo 'FQDN repository already exists.'; help_csr_create; return 1; fi
+  # shellcheck disable=SC2174
   mkdir -m 700 -p "$fqdn_dir"
   local -r san=$(utils_opt_san "$dns" "$address")
   openssl req -newkey rsa:2048 -sha256 -nodes \
@@ -783,8 +780,8 @@ csr_create(){
     -keyout "$fqdn_dir/key.pem" \
     -subj "/C=$country/O=$organization/L=$location/CN=${fqdn}/emailAddress=$email" \
     ${san:+-addext "$san"} \
-    2>/dev/null
-  [[ $? != 0 ]] && return 1
+    2>/dev/null \
+    || return 1
   if [[ -z "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo "Key created in: $fqdn_dir/key.pem"
   else
@@ -940,7 +937,7 @@ csr_sign_from_file(){
     [[ -f "$ca_fqdn_dir/key.pem" ]] && rm "$ca_fqdn_dir/key.pem"
     utils_decrypt "$ca_fqdn_dir/key.pem.gpg" "$ca_fqdn_dir/key.pem" > /dev/null
   fi
-  utils_write_sign_cnf ${address:+"-a $address"} ${dns:+"-d $dns"} $intermediate $fqdn_dir/sign.cnf
+  utils_write_sign_cnf ${address:+"-a $address"} ${dns:+"-d $dns"} $intermediate "$fqdn_dir"/sign.cnf
   # See [Requirements](https://support.apple.com/en-us/103769) for trusted certificates in iOS 13 and macOS 10.15
   # TLS server certificates must have a validity period of 825 days or fewer (as expressed in the NotBefore and NotAfter fields of the certificate).
   # If you want to copy the extensions from the csr to the crt, add the option `-copy_extensions=copyall`
@@ -1044,8 +1041,8 @@ utils_encrypt(){
   else
     if [[ ! -f "$source" ]]; then echo 'No such file to encrypt.'; exit 1; fi
     if [[ -f "$target" ]]; then rm "$target"; fi
-    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output "$target" --symmetric "$source"
-    [[ $? != 0 ]] && echo 'GPG command failed' && return 1
+    gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output "$target" --symmetric "$source" \
+    || echo 'GPG command failed' && return 1
     echo "$target"
   fi
 }

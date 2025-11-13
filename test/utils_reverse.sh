@@ -4,8 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
-  res=$(utils_reverse test.domain.com)
-  [[ $? != 0 ]] && return 1
+  res=$(utils_reverse test.domain.com) || return 1
   [[ $res == 'com.domain.test' ]] || return 1
 }
 

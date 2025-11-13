@@ -13,7 +13,7 @@ function test {
   cert test.domain.com > /dev/null
   # create an invalid certificate
   cacert -c FR -e no-reply@domain -l P -o O invalid.com > /dev/null
-  cp -rp "$KEYSER_VAULT_DIR/com.invalid/cert.pem" "$KEYSER_VAULT_DIR/com.domain/cert.pem"
+  cp -p "$KEYSER_VAULT_DIR/com.invalid/cert.pem" "$KEYSER_VAULT_DIR/com.domain/cert.pem"
   # Validate certificate
   res=$(cert_check_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.pem")
   [[ $? != 1 ]] && return 1

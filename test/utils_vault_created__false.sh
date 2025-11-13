@@ -8,7 +8,7 @@ function test {
   rm -rf $KEYSER_VAULT_DIR
   # Validation
   res=$(utils_vault_created 2>&1)
-  [[ $? != 1 ]] && return 1
+  [[ $? == 1 ]] || return 1
   [[ $res == "Vault not initialized, run \`keyser init\` first." ]] || return 1
 }
 

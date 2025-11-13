@@ -1,13 +1,12 @@
 #!/bin/bash
-
 # set -e
+
 cd "$(dirname "${BASH_SOURCE[0]}")"
 . ../keyser
 
 function test {
   # Generate a certificate authority
-  version | grep -E '"[0-9]\.[0-9]\.[0-9]"' > /dev/null
-  [[ $? != 0 ]] && return 1
+  version | grep -E '"[0-9]\.[0-9]\.[0-9]"' > /dev/null || return 1
   true
 }
 

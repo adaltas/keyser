@@ -12,8 +12,7 @@ function test {
   # Create a certificate
   cert test.domain.com > /dev/null
   # Export the certificate
-  cert_export -c test.domain.com $KEYSER_VAULT_DIR/some/target > /dev/null
-  [[ $? != 0 ]] && return 1
+  cert_export -c test.domain.com "$KEYSER_VAULT_DIR"/some/target > /dev/null || return 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem ]] || return 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.key.pem ]] || return 1
 }

@@ -10,8 +10,7 @@ function test {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Create a wildcard certificate
-  res=$(cert "*.domain.com")
-  [[ $? != 0 ]] && return 1
+  res=$(cert "*.domain.com") || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.*/ca.crt" ]] || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.*/cert.pem" ]] || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.*/key.pem" ]] || return 1

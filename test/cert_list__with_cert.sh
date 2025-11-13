@@ -11,8 +11,7 @@ function test {
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Create a certificate
   cert test.domain.com > /dev/null
-  res=$(cert_list)
-  [[ $? != 0 ]] && return 1
+  res=$(cert_list) || return 1
   echo "$res" | grep -w 'test.domain.com' > /dev/null || return 1
 }
 

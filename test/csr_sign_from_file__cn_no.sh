@@ -7,13 +7,13 @@ function test {
   KEYSER_VAULT_DIR='../tmp/csr_sign_from_file__cn_no'
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR && init >/dev/null
-  mkdir -p $KEYSER_VAULT_DIR/tmp
+  mkdir -p "$KEYSER_VAULT_DIR"/tmp
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
   # Create a CSR
   openssl req -newkey rsa:2048 -sha256 -nodes \
-    -out $KEYSER_VAULT_DIR/tmp/cert.csr \
-    -keyout $KEYSER_VAULT_DIR/tmp/key.pem \
+    -out "$KEYSER_VAULT_DIR"/tmp/cert.csr \
+    -keyout "$KEYSER_VAULT_DIR"/tmp/key.pem \
     -subj "/" 2>/dev/null
   # Sign the certificate
   res=$(csr_sign_from_file "$KEYSER_VAULT_DIR/tmp/cert.csr" domain.com)

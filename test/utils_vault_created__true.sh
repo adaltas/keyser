@@ -9,7 +9,7 @@ function test {
   rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Validation
   res=$(utils_vault_created 2>&1)
-  [[ $? != 1 ]] && return 0
+  [[ $? == 1 ]] || return 0
   [[ $res == "" ]] || return 1
 }
 

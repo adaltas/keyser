@@ -9,8 +9,7 @@ function test {
   KEYSER_GPG_PASSPHRASE=
   rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # List all certificates from the vault
-  res=$(cacert_list)
-  [[ $? != 0 ]] && return 1
+  res=$(cacert_list) || return 1
   echo "$res" | grep 'There are no registered certificate autority in this vault.' > /dev/null || return 1
 }
 

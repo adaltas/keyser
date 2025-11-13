@@ -12,8 +12,7 @@ function test {
   # Create a certificate
   csr_create -c FR -e no-reply@domain -l P -o O test.domain.com >/dev/null
   # Sign the certificate
-  res=$(csr_sign_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.csr")
-  [[ $? != 0 ]] && return 1
+  res=$(csr_sign_from_file "$KEYSER_VAULT_DIR/com.domain.test/cert.csr") || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.pem" ]] || return 1
   echo "$res" | grep 'Certificate created in:' > /dev/null || return 1
 }

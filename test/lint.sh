@@ -4,7 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 
 function test {
   if command -v shellcheck >/dev/null; then
-    shellcheck -S warning -e SC2174 ../keyser
+    shellcheck -e SC2164 ../keyser ../test/*
   else
     echo -n 'SKIP'
   fi

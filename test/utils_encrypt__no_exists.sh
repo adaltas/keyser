@@ -8,7 +8,7 @@ function test {
   KEYSER_GPG_PASSPHRASE=secret
   mkdir -p $KEYSER_VAULT_DIR
   res=$(utils_encrypt $KEYSER_VAULT_DIR/does_not_exists $KEYSER_VAULT_DIR/target)
-  [[ $? == 0 ]] && return 1
+  [[ $? == 1 ]] || return 1
   echo "$res" | grep 'No such file to encrypt.' > /dev/null || return 1
 }
 

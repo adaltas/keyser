@@ -14,8 +14,7 @@ function test {
   cert b.domain.com > /dev/null
   utils_decrypt "$KEYSER_VAULT_DIR"/com.domain.a/key.pem.gpg "$KEYSER_VAULT_DIR"/com.domain.a/key.pem > /dev/null
   # Modulus match
-  utils_openssl_modulus "$KEYSER_VAULT_DIR"/com.domain.a/key.pem "$KEYSER_VAULT_DIR"/com.domain.a/cert.pem
-  [[ $? == 0 ]] || return 1
+  utils_openssl_modulus "$KEYSER_VAULT_DIR"/com.domain.a/key.pem "$KEYSER_VAULT_DIR"/com.domain.a/cert.pem || return 1
   # Modulus dont match
   utils_openssl_modulus "$KEYSER_VAULT_DIR"/com.domain.a/key.pem "$KEYSER_VAULT_DIR"/com.domain.b/cert.pem
   [[ $? == 1 ]] || return 1

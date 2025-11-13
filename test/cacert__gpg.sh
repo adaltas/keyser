@@ -9,8 +9,7 @@ function test {
   KEYSER_GPG_PASSPHRASE=secret
   rm -rf $KEYSER_VAULT_DIR && init >/dev/null
   # Generate a certificate authority
-  res=$(cacert -c FR -e no-reply@domain -l P -o O domain.com)
-  [[ $? != 0 ]] && return 1
+  res=$(cacert -c FR -e no-reply@domain -l P -o O domain.com) || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain/cert.pem" ]] || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain/key.pem" ]] && return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain/key.pem.gpg" ]] || return 1

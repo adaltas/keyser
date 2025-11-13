@@ -12,8 +12,7 @@ function test {
   # Create a certificate
   cert test.domain.com > /dev/null
   # View a certificate
-  res=$(cert_view test.domain.com)
-  [[ $? != 0 ]] && return 1
+  res=$(cert_view test.domain.com) || return 1
   echo "$res" | grep -- '-----BEGIN CERTIFICATE-----' > /dev/null || return 1
   echo "$res" | grep -- '-----END CERTIFICATE-----' > /dev/null || return 1
 

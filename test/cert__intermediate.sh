@@ -12,11 +12,10 @@ test() {
   # Create an intermediate certificates
   cert -i domain-2.com domain-1.com >/dev/null
   cert -i domain-3.com domain-2.com >/dev/null
-  # # Create a leaf certificate
+  # Create a leaf certificate
   cert domain-4.com domain-3.com >/dev/null
   # Certificate validation
-  res=$(cert_check domain-4.com)
-  [[ $? != 0 ]] && return 1
+  res=$(cert_check domain-4.com) || return 1
   echo "$res" | grep 'Certificate is valid.' > /dev/null || return 1
 }
 

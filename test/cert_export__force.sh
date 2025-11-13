@@ -15,8 +15,7 @@ function test {
   mkdir -p "$KEYSER_VAULT_DIR"/some/target
   touch "$KEYSER_VAULT_DIR"/some/target/com.domain.test.cert.pem
   touch "$KEYSER_VAULT_DIR"/some/target/com.domain.test.pem.pem
-  cert_export -f test.domain.com "$KEYSER_VAULT_DIR"/some/target > /dev/null
-  [[ $? != 0 ]] && return 1
+  cert_export -f test.domain.com "$KEYSER_VAULT_DIR"/some/target > /dev/null || return 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.cert.pem ]] || return 1
   [[ -f $KEYSER_VAULT_DIR/some/target/com.domain.test.key.pem ]] || return 1
 }

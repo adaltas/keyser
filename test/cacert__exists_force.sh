@@ -12,8 +12,7 @@ function test {
   cacert -c FR -e no-reply@domain -l P -o O domain.com > /dev/null
   # Attempt to overwrite the certificate
   # cacert -f domain.com
-  res=$(cacert -f -c FR -e no-reply@domain -l P -o O domain.com)
-  [[ $? != 0 ]] && return 1
+  res=$(cacert -f -c FR -e no-reply@domain -l P -o O domain.com) || return 1
   echo "$res" | grep 'Certificate key created:' > /dev/null || return 1
   echo "$res" | grep 'Certificate authority created:' > /dev/null || return 1
 }

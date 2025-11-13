@@ -15,8 +15,7 @@ function test {
   # # Create a leaf certificate
   cert domain-4.com domain-3.com >/dev/null
   # List all certificates from the vault
-  res=$(cacert_list)
-  [[ $? != 0 ]] && return 1
+  res=$(cacert_list) || return 1
   echo "$res" | grep -w 'domain-1.com' > /dev/null || return 1
 }
 

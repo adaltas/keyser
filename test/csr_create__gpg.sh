@@ -10,8 +10,7 @@ function test {
   # Generate a certificate authority
   cacert -c FR -e no-reply@domain -l P -o O domain.com >/dev/null
   # Create a certificate
-  res=$(csr_create -c FR -e no-reply@domain -l P -o O test.domain.com)
-  [[ $? != 0 ]] && (echo $res && return 1)
+  res=$(csr_create -c FR -e no-reply@domain -l P -o O test.domain.com) || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/key.pem" ]] && return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/key.pem.gpg" ]] || return 1
   [[ -f "$KEYSER_VAULT_DIR/com.domain.test/cert.csr" ]] || return 1

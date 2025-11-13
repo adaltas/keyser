@@ -13,7 +13,7 @@ function test {
   cert test.domain.com > /dev/null
   # Attempt to export the key and the certificate
   res=$(cert_export test.domain.com "$KEYSER_VAULT_DIR"/some/target)
-  [[ $? == 0 ]] && return 1
+  [[ $? == 1 ]] || return 1
   echo "$res" | grep 'Target is not a directory.' > /dev/null || return 1
 }
 

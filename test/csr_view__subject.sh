@@ -12,8 +12,7 @@ function test {
   # Create a certificate
   csr_create -c FR -e no-reply@domain -l P -o O test.domain.com >/dev/null
   # View the certificate
-  res=$(csr_view -s test.domain.com)
-  [[ $? != 0 ]] && return 1
+  res=$(csr_view -s test.domain.com) || return 1
   # "Certificate Request" shall not be present
   echo "$res" | grep 'Certificate Request:' > /dev/null && return 1
   # Only the subject shall be present

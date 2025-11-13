@@ -12,8 +12,7 @@ function test {
   # Create a certificate
   cert test.domain.com > /dev/null
   # Validate certificate
-  res=$(cert_check test.domain.com)
-  [[ $? != 0 ]] && return 1
+  res=$(cert_check test.domain.com) || return 1
   echo "$res" | grep 'Certificate is valid.' > /dev/null || return 1
 }
 

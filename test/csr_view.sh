@@ -12,8 +12,7 @@ function test {
   # Create a certificate
   csr_create -c FR -e no-reply@domain -l P -o O test.domain.com >/dev/null
   # View the certificate
-  res=$(csr_view test.domain.com)
-  [[ $? == 0 ]] || return 1
+  res=$(csr_view test.domain.com) || return 1
   echo "$res" | grep 'Certificate Request:' > /dev/null || return 1
   echo "$res" | grep -E 'Subject: C ?= ?FR, O ?= ?O, L ?= ?P, CN ?= ?test.domain.com, emailAddress ?= ?no-reply@domain' > /dev/null || return 1
 }

@@ -6,8 +6,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 function test {
   local fqdn="*.domain.com"
   # local fqdn_dir="$KEYSER_VAULT_DIR/$(utils_reverse $fqdn)"
-  local -r res=$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")
-  [[ $? != 0 ]] && return 1
+  local -r res=$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn") || return 1
   [[ $res == $KEYSER_VAULT_DIR'/com.domain.*' ]] || return 1
 }
 
