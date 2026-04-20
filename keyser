@@ -134,7 +134,7 @@ Example
     -c FR \
     -d local,localhost
     -e no-reply@adaltas.com \
-    -i 127.0.0.1
+    -a 127.0.0.1
     -l Paris \
     -o Adaltas \
     adaltas.com
