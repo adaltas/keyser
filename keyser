@@ -1042,7 +1042,7 @@ utils_encrypt(){
     if [[ ! -f "$source" ]]; then echo 'No such file to encrypt.'; exit 1; fi
     if [[ -f "$target" ]]; then rm "$target"; fi
     gpg --batch --passphrase "$KEYSER_GPG_PASSPHRASE" --output "$target" --symmetric "$source" \
-    || echo 'GPG command failed' && return 1
+    || { echo 'GPG command failed'; return 1; }
     echo "$target"
   fi
 }
