@@ -1036,7 +1036,7 @@ utils_domain(){
 utils_encrypt(){
   local source=$1
   local target=$2
-  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
+  if [[ -z "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo "$source"
   else
     if [[ ! -f "$source" ]]; then echo 'No such file to encrypt.'; exit 1; fi
@@ -1050,7 +1050,7 @@ utils_encrypt(){
 utils_decrypt(){
   local source=$1
   local target=$2
-  if [[ ! -n "$KEYSER_GPG_PASSPHRASE" ]]; then
+  if [[ -z "$KEYSER_GPG_PASSPHRASE" ]]; then
     echo "$source"
   else
     if [[ ! -f "$source" ]]; then echo 'No such file to decrypt.'; exit 1; fi
