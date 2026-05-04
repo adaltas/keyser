@@ -664,7 +664,7 @@ Options
   -t                Print text and fingerprint information.
   fqdn              FQDN of the registered certificate.
 
-Print the detailed information of a Certificate Signing Request (CSR) file.
+Print the detailed information of a Certificate file.
 """
 }
 cert_view(){
