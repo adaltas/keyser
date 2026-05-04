@@ -694,7 +694,7 @@ cert_view(){
   # Validation
   if [[ -z "$fqdn" ]]; then echo 'FQDN is missing from arguments.'; help_cert_view; return 1; fi
   local -r fqdn_dir=$KEYSER_VAULT_DIR/$(utils_reverse "$fqdn")
-  if [[ ! -f "$fqdn_dir/cert.pem" ]]; then echo "Certificate file for domain \"$fqdn\" does not exist."; help_cert_view; return 1; fi
+  if [[ ! -f "$fqdn_dir/cert.pem" ]]; then echo "Certificate file for domain \"$fqdn\" does not exist in \"$fqdn_dir/cert.pem\"."; help_cert_view; return 1; fi
   # Obtain certificate information
   if [[ -n $subject ]]; then
     openssl x509 -noout -subject \
